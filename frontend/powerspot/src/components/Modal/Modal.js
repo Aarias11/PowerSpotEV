@@ -13,7 +13,7 @@ const Modal = ({ isOpen, onClose, children }) => {
           onClick={onClose}
         >
           <motion.div
-            className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md"
+            className="bg-[#131313]/95 rounded-lg shadow-lg p-6  w-[853px] h-[540px]"
             initial={{ scale: 0.8 }}
             animate={{ scale: 1 }}
             exit={{ scale: 0.8 }}
