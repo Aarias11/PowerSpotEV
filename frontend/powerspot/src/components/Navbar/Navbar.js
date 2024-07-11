@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
 import Login from '../Login/Login';
-import Signup from '../Signup/Signup'
+import Signup from '../Signup/Signup';
+import { useAuth } from '../AuthContext/AuthContext'; // Correct path to your AuthContext
+import { Link } from 'react-router-dom';
 
 const Navbar = () => {
+  const { currentUser, signout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isSignupOpen, setIsSignupOpen] = useState(false);
+  
   const toggleMenu = () => {
     setIsOpen(!isOpen);
   };
@@ -17,22 +21,35 @@ const Navbar = () => {
           <div className="flex space-x-4">
             {/* Logo */}
             <div className='flex items-center md:flex md:items-center'>
-              <a href="/" className="flex items-center  px-2 text-gray-700">
+              <a href="/" className="flex items-center px-2 text-gray-700">
                 <span className="font-bold">PowerSpot EV</span>
               </a>
             </div>
             {/* Primary Nav */}
-            <div className="hidden md:flex items-center space-x-1">
+            <ul className="hidden md:flex items-center space-x-1">
               <a href="/" className=" px-3 text-gray-700 hover:text-gray-900">Home</a>
               <a href="/features" className="py-5 px-3 text-gray-700 hover:text-gray-900">Features</a>
               <a href="/pricing" className="py-5 px-3 text-gray-700 hover:text-gray-900">Pricing</a>
-              <a href="/contact" className="py-5 px-3 text-gray-700 hover:text-gray-900">Contact</a>
-            </div>
+              
+            </ul>
           </div>
           {/* Secondary Nav */}
           <div className="hidden md:flex items-center space-x-1">
-          <button onClick={() => setIsLoginOpen(true)} className=" px-3">Login</button>
-            <button onClick={() => setIsSignupOpen(true)} className="py-1 px-3 bg-yellow-400 hover:bg-yellow-300 text-yellow-900 rounded transition duration-300">Signup</button>
+            {currentUser ? (
+              <>
+              <ul className=' list-none flex items-center gap-4'>
+              <Link to='/dashboard'>
+                <li>Dashboard</li>
+              </Link>
+              <button onClick={signout} className="px-3 py-1 bg-red-500 hover:bg-red-400 text-white rounded transition duration-300">Sign Out</button>
+              </ul>
+              </>
+            ) : (
+              <>
+                <button onClick={() => setIsLoginOpen(true)} className="px-3">Login</button>
+                <button onClick={() => setIsSignupOpen(true)} className="py-1 px-3 bg-yellow-400 hover:bg-yellow-300 text-yellow-900 rounded transition duration-300">Signup</button>
+              </>
+            )}
           </div>
           {/* Mobile Menu Button */}
           <div className="md:hidden flex items-center">
@@ -61,14 +78,20 @@ const Navbar = () => {
             <a href="/pricing" className="block py-2 px-4 text-sm text-gray-700 hover:bg-gray-200">Pricing</a>
             <a href="/contact" className="block py-2 px-4 text-sm text-gray-700 hover:bg-gray-200">Contact</a>
             <div className='ml-2'>
-            <button onClick={() => setIsLoginOpen(true)} className="py-5 px-3">Login</button>
-            <button onClick={() => setIsSignupOpen(true)} className="py-2 px-3 bg-yellow-400 hover:bg-yellow-300 text-yellow-900 rounded transition duration-300">Signup</button>
+              {currentUser ? (
+                <button onClick={signout} className="py-2 px-3 bg-red-500 hover:bg-red-400 text-white rounded transition duration-300">Sign Out</button>
+              ) : (
+                <>
+                  <button onClick={() => setIsLoginOpen(true)} className="py-2 px-3">Login</button>
+                  <button onClick={() => setIsSignupOpen(true)} className="py-2 px-3 bg-yellow-400 hover:bg-yellow-300 text-yellow-900 rounded transition duration-300">Signup</button>
+                </>
+              )}
             </div>
           </nav>
         </div>
       </div>
-       {/* Modals */}
-       <Login isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
+      {/* Modals */}
+      <Login isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
       <Signup isOpen={isSignupOpen} onClose={() => setIsSignupOpen(false)} />
     </nav>
   );

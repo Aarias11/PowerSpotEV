@@ -8,7 +8,7 @@ import {
 import axios from "axios";
 import _ from "lodash";
 import Drawer from "../../components/Drawer/Drawer";
-import { FaSearch } from "react-icons/fa";
+import { FaSearch  } from "react-icons/fa";
 import { IoLocation } from "react-icons/io5";
 
 const containerStyle = {

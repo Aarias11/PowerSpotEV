@@ -6,18 +6,34 @@ import { FaEnvelope, FaEye, FaEyeSlash } from 'react-icons/fa';
 import loginpicture from '../../assets/AuthPics/loginpicture.jpg';
 import Apple from '../../assets/AuthPics/Apple.png';
 import Googleicon from '../../assets/AuthPics/Googleicon.png';
+import { useNavigate } from 'react-router-dom'; // useNavigate instead of useHistory
+import { getFirestore, doc, getDoc } from 'firebase/firestore';
+import { useAuth } from '../AuthContext/AuthContext'; // Import the AuthContext
 
 const Login = ({ isOpen, onClose }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
+  const navigate = useNavigate(); // useNavigate hook
+  const { setIsFirstLogin } = useAuth(); // Use the AuthContext
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError(null);
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      const db = getFirestore();
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      if (userDoc.exists() && userDoc.data().isFirstLogin) {
+        setIsFirstLogin(true);
+        navigate('/profile-setup');
+      } else {
+        setIsFirstLogin(false);
+        navigate('/dashboard');
+      }
       onClose();
     } catch (error) {
       setError(error.message);
@@ -27,7 +43,18 @@ const Login = ({ isOpen, onClose }) => {
   const handleGoogleLogin = async () => {
     const provider = new GoogleAuthProvider();
     try {
-      await signInWithPopup(auth, provider);
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+
+      const db = getFirestore();
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      if (userDoc.exists() && userDoc.data().isFirstLogin) {
+        setIsFirstLogin(true);
+        navigate('/profile-setup');
+      } else {
+        setIsFirstLogin(false);
+        navigate('/dashboard');
+      }
       onClose();
     } catch (error) {
       setError(error.message);
@@ -48,7 +75,7 @@ const Login = ({ isOpen, onClose }) => {
           <img className="w-full h-full opacity-80" src={loginpicture} alt="Login" />
         </div>
         {/* Right Side */}
-        <div className="w-[50%] h-[490px] flex items-center justify-center ">
+        <div className="w-[50%] h-[490px] flex items-center justify-center">
           <div className="w-full max-w-sm p-4">
             <h2 className="text-xl font-bold mb-4 text-white text-center">Login</h2>
             <form onSubmit={handleLogin} className="space-y-4">
