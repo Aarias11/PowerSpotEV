@@ -1,8 +1,9 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { IoLocation } from "react-icons/io5";
+
 import chargingstation from '../../assets/StationInfoIcons/icons8-charging-station-64.png';
-import location from '../../assets/StationInfoIcons/location.png'
+import location from '../../assets/StationInfoIcons/location.png';
 import parkingstation from '../../assets/StationInfoIcons/icons8-charging-station-50.png';
 import status from '../../assets/StationInfoIcons/icons8-status-30.png';
 import dollar from '../../assets/StationInfoIcons/icons8-dollar-50.png';
@@ -27,7 +28,7 @@ const Drawer = ({ isOpen, onClose, selectedStation, nearbyLocations }) => {
         animate={{ x: isOpen ? 0 : '-100%' }}
         transition={{ type: 'tween', duration: 0.3 }}
       >
-        <div className="flex justify-between items-center p-4 bg-[#131313]/90 text-white">
+        <div className="flex justify-between items-center p-4 bg-gray-800 text-white">
           <h2 className="text-xl font-bold">Station Info</h2>
           <button onClick={onClose} className="text-white">
             <svg
@@ -59,7 +60,7 @@ const Drawer = ({ isOpen, onClose, selectedStation, nearbyLocations }) => {
               {/* Electric Company and kW offered Container */}
               <div className="flex justify-between">
                 <h4>{selectedStation?.OperatorInfo?.Title || "N/A"}</h4>
-                <h4>{selectedStation?.UsageCost || "N/A"}</h4>
+                <h4>{selectedStation?.Connections[0]?.PowerKW || "N/A"} kW</h4>
               </div>
               {/* Selected Station Container */}
               <div>
@@ -131,9 +132,9 @@ const Drawer = ({ isOpen, onClose, selectedStation, nearbyLocations }) => {
           {nearbyLocations.map((location, index) => (
             <div key={index} className='flex gap-4 items-center p-2'>
               <img className='w-5 h-5' src={exactlocation} alt="Nearby Location" />
-              <span className='font-light text-[12px]'>Address: {location.AddressInfo.AddressLine1}</span>
-              <span className='font-light text-[12px]'>{location.AddressInfo.Title}</span>
-              {/* <span className='font-light text-[14px]'>{location.Distance} miles</span> */}
+              <span className='font-light text-[14px]'>Address: {location.AddressInfo.AddressLine1}</span>
+              <span className='font-light text-[14px]'>{location.AddressInfo.Title}</span>
+              <span className='font-light text-[14px]'>{location.Distance} miles</span>
             </div>
           ))}
         </div>

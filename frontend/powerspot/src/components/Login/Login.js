@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Modal from '../Modal/Modal';
 import { auth } from '../../firebase';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { FaEnvelope, FaEye, FaEyeSlash } from 'react-icons/fa';
 import loginpicture from '../../assets/AuthPics/loginpicture.jpg';
 import Apple from '../../assets/AuthPics/Apple.png';
@@ -18,6 +18,16 @@ const Login = ({ isOpen, onClose }) => {
     setError(null);
     try {
       await signInWithEmailAndPassword(auth, email, password);
+      onClose();
+    } catch (error) {
+      setError(error.message);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    const provider = new GoogleAuthProvider();
+    try {
+      await signInWithPopup(auth, provider);
       onClose();
     } catch (error) {
       setError(error.message);
@@ -83,7 +93,10 @@ const Login = ({ isOpen, onClose }) => {
             </div>
             {/* Google and Apple Login */}
             <div className="w-full flex flex-col justify-center items-center gap-4 mt-10 relative">
-              <button className="w-[200px] h-[40px] border rounded-full text-white text-[12px] flex justify-center items-center gap-4">
+              <button
+                className="w-[200px] h-[40px] border rounded-full text-white text-[12px] flex justify-center items-center gap-4"
+                onClick={handleGoogleLogin}
+              >
                 <img className="w-5 h-5" src={Googleicon} alt="Google" />
                 Login with Google
               </button>

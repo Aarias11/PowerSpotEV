@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Modal from '../Modal/Modal';
 import { auth } from '../../firebase';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { FaUser, FaEnvelope, FaEye, FaEyeSlash } from 'react-icons/fa';
 import signuppicture from '../../assets/AuthPics/signuppicture.jpg';
 import Apple from '../../assets/AuthPics/Apple.png';
@@ -25,6 +25,16 @@ const Signup = ({ isOpen, onClose }) => {
     }
   };
 
+  const handleGoogleSignup = async () => {
+    const provider = new GoogleAuthProvider();
+    try {
+      await signInWithPopup(auth, provider);
+      onClose();
+    } catch (error) {
+      setError(error.message);
+    }
+  };
+
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
@@ -36,7 +46,7 @@ const Signup = ({ isOpen, onClose }) => {
         <div className="w-[50%] h-[490px]">
           <img className="w-full h-full opacity-80" src={signuppicture} alt="Signup" />
         </div>
-        <div className="w-[50%] h-[490px] flex items-center justify-center ">
+        <div className="w-[50%] h-[490px] flex items-center justify-center">
           <div className="w-full max-w-sm p-4">
             <h2 className="text-xl font-bold mb-4 text-white text-center">Signup</h2>
             {/* Signup Form */}
@@ -92,7 +102,10 @@ const Signup = ({ isOpen, onClose }) => {
               <div className="w-[45%] border-t mt-2"></div>
             </div>
             <div className="w-full flex flex-col justify-center items-center gap-4 mt-5 relative">
-              <button className="w-[200px] h-[40px] border rounded-full text-white text-[12px] flex justify-center items-center gap-4">
+              <button
+                className="w-[200px] h-[40px] border rounded-full text-white text-[12px] flex justify-center items-center gap-4"
+                onClick={handleGoogleSignup}
+              >
                 <img className="w-5 h-5" src={Googleicon} alt="Google" />
                 Signup with Google
               </button>
