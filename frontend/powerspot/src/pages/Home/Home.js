@@ -8,8 +8,10 @@ import {
 import axios from "axios";
 import _ from "lodash";
 import Drawer from "../../components/Drawer/Drawer";
-import { FaSearch, FaRegHeart, FaHeart  } from "react-icons/fa";
+import { FaSearch, FaRegHeart, FaHeart } from "react-icons/fa";
 import { IoLocation } from "react-icons/io5";
+import { auth, db } from '../../firebase';
+import { collection, doc, getDocs, query, where, setDoc, deleteDoc, getDoc } from 'firebase/firestore';
 
 const containerStyle = {
   width: "100%",
@@ -17,7 +19,7 @@ const containerStyle = {
   position: "relative",
 };
 
-const center = {
+const defaultCenter = {
   lat: 40.678910269304055, // Default center, e.g., Brooklyn, NY
   lng: -73.91410561491149,
 };
@@ -31,6 +33,8 @@ const Home = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [loading, setLoading] = useState(false); // For loading indicator
   const [nearbyLocations, setNearbyLocations] = useState([]);
+  const [favoriteStations, setFavoriteStations] = useState([]);
+  const [center, setCenter] = useState(defaultCenter);
 
   const fetchStations = async (center) => {
     if (!center) return;
@@ -39,7 +43,7 @@ const Home = () => {
     try {
       const response = await axios.get("https://api.openchargemap.io/v3/poi/", {
         params: {
-          key: "0586edde-e54d-4f22-ac83-51c5a91c0d4e", // Replace with your OpenChargeMap API key
+          key: process.env.REACT_APP_OPEN_CHARGE_API_KEY, // Replace with your OpenChargeMap API key
           latitude: center.lat,
           longitude: center.lng,
           distance: 5, // 5-mile radius
@@ -70,7 +74,7 @@ const Home = () => {
         {
           params: {
             latlng: `${lat},${lng}`,
-            key: "AIzaSyCGvCBIX2RNeihtAUD-EcGxXJApmFdESzk",
+            key: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
           },
         }
       );
@@ -91,7 +95,7 @@ const Home = () => {
     try {
       const response = await axios.get("https://api.openchargemap.io/v3/poi/", {
         params: {
-          key: "0586edde-e54d-4f22-ac83-51c5a91c0d4e", // Replace with your OpenChargeMap API key
+          key: process.env.REACT_APP_OPEN_CHARGE_API_KEY, // Replace with your OpenChargeMap API key
           latitude,
           longitude,
           distance: 5, // 5-mile radius
@@ -129,21 +133,88 @@ const Home = () => {
   }, [map, debouncedFetchStations, debouncedFetchCity]);
 
   useEffect(() => {
-    if (map) {
-      const center = map.getCenter();
-      if (center) {
-        const centerCoords = { lat: center.lat(), lng: center.lng() };
-        fetchStations(centerCoords);
-        fetchCity(center.lat(), center.lng());
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setCenter({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        });
+      },
+      () => {
+        console.error("Error fetching user location");
       }
-    }
-  }, [map]);
-
-  const onSelect = useCallback((item) => {
-    setSelectedStation(item);
-    setDrawerOpen(true); // Open the drawer when a station is selected
-    fetchNearbyLocations(item.AddressInfo.Latitude, item.AddressInfo.Longitude); // Fetch nearby locations
+    );
   }, []);
+
+  useEffect(() => {
+    if (map) {
+      fetchStations(center);
+      fetchCity(center.lat, center.lng);
+    }
+  }, [map, center]);
+
+  useEffect(() => {
+    const fetchFavoriteStations = async () => {
+      const user = auth.currentUser;
+      if (!user) return;
+
+      try {
+        const favoritesCollectionRef = collection(db, 'favorites');
+        const q = query(favoritesCollectionRef, where("userId", "==", user.uid));
+        const favoriteStationsSnapshot = await getDocs(q);
+
+        if (favoriteStationsSnapshot.empty) {
+          console.log("No favorite stations found for the user");
+          setFavoriteStations([]);
+          return;
+        }
+
+        const favoriteStationsData = favoriteStationsSnapshot.docs.map(doc => doc.data());
+
+        if (favoriteStationsData.length === 0) {
+          console.log("No favorite stations found for the user");
+          setFavoriteStations([]);
+          return;
+        }
+
+        setFavoriteStations(favoriteStationsData);
+      } catch (error) {
+        console.error("Error fetching favorite stations:", error);
+      }
+    };
+
+    fetchFavoriteStations();
+  }, []);
+
+  const handleToggleFavorite = async (station) => {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    try {
+      const stationDocRef = doc(db, 'favorites', `${user.uid}_${station.ID}`);
+      const stationDocSnap = await getDoc(stationDocRef);
+
+      if (stationDocSnap.exists()) {
+        // If the station is already a favorite, remove it from favorites
+        await deleteDoc(stationDocRef);
+        setFavoriteStations(favoriteStations.filter(fav => fav.stationId !== station.ID));
+      } else {
+        // If the station is not a favorite, add it to favorites
+        await setDoc(stationDocRef, {
+          userId: user.uid,
+          stationId: station.ID,
+          operatorTitle: station.OperatorInfo?.Title || 'Unnamed Station',
+          address: station.AddressInfo?.AddressLine1 || 'No address available',
+          powerKW: station.Connections[0]?.PowerKW || 'N/A',
+          status: station.StatusType?.Title || 'N/A',
+          isFavorite: true
+        });
+        setFavoriteStations([...favoriteStations, { stationId: station.ID, isFavorite: true }]);
+      }
+    } catch (error) {
+      console.error("Error toggling favorite status: ", error);
+    }
+  };
 
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value);
@@ -158,7 +229,7 @@ const Home = () => {
           {
             params: {
               address: searchTerm,
-              key: "AIzaSyCGvCBIX2RNeihtAUD-EcGxXJApmFdESzk",
+              key: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
             },
           }
         );
@@ -173,6 +244,12 @@ const Home = () => {
     }
   };
 
+  const onSelect = (item) => {
+    setSelectedStation(item);
+    setDrawerOpen(true);
+    fetchNearbyLocations(item.AddressInfo.Latitude, item.AddressInfo.Longitude);
+  };
+
   const filteredStations = useMemo(
     () =>
       stations.filter((station) =>
@@ -185,11 +262,11 @@ const Home = () => {
 
   const closeDrawer = () => {
     setDrawerOpen(false);
-    setTimeout(() => setSelectedStation(null), 300); // Delay setting the station to null to allow the animation to finish
+    setTimeout(() => setSelectedStation(null), 300);
   };
 
   return (
-    <LoadScript googleMapsApiKey="AIzaSyCGvCBIX2RNeihtAUD-EcGxXJApmFdESzk">
+    <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY}>
       <div style={containerStyle}>
         {/* Loading Indicator */}
         {loading && (
@@ -229,16 +306,28 @@ const Home = () => {
           onLoad={(map) => setMap(map)}
           onIdle={handleIdle}
         >
-          {filteredStations.map((station) => (
-            <Marker
-              key={station.ID}
-              position={{
-                lat: station.AddressInfo.Latitude,
-                lng: station.AddressInfo.Longitude,
-              }}
-              onClick={() => onSelect(station)}
-            />
-          ))}
+          {filteredStations.map((station) => {
+            const isFavorite = favoriteStations.some(
+              (fav) => fav.stationId === station.ID
+            );
+
+            return (
+              <Marker
+                key={station.ID}
+                position={{
+                  lat: station.AddressInfo.Latitude,
+                  lng: station.AddressInfo.Longitude,
+                }}
+                onClick={() => onSelect(station)}
+                icon={{
+                  url: isFavorite
+                    ? "https://img.icons8.com/?size=100&id=yUGu5KXHNq3O&format=png&color=FA5252" // Heart Icon
+                    : "https://img.icons8.com/?size=100&id=7880&format=png&color=FA5252", // Location Icon
+                  scaledSize: new window.google.maps.Size(32, 32),
+                }}
+              />
+            );
+          })}
 
           {selectedStation && (
             <InfoWindow
@@ -252,9 +341,8 @@ const Home = () => {
                 <img
                   src="https://via.placeholder.com/100"
                   alt="Station"
-                  className="w-full "
-                />{" "}
-                {/* Placeholder image */}
+                  className="w-full"
+                />
                 <h2>{selectedStation.AddressInfo.Title}</h2>
                 <p>
                   Connectors:{" "}
@@ -262,6 +350,15 @@ const Home = () => {
                     (conn) => conn.ConnectionType.Title
                   ).join(", ")}
                 </p>
+                <button onClick={() => handleToggleFavorite(selectedStation)}>
+                  {favoriteStations.some(
+                    (fav) => fav.stationId === selectedStation.ID
+                  ) ? (
+                    <FaHeart size={20} className="text-red-500" />
+                  ) : (
+                    <FaRegHeart size={20} className="text-gray-500" />
+                  )}
+                </button>
               </div>
             </InfoWindow>
           )}

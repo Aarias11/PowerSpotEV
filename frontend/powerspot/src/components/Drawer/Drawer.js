@@ -4,8 +4,7 @@ import { IoLocation } from "react-icons/io5";
 import { FaRegHeart, FaHeart } from "react-icons/fa";
 import { MdAddPhotoAlternate } from "react-icons/md";
 import { Link } from 'react-router-dom';
-import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../../firebase';
 import chargingstation from '../../assets/StationInfoIcons/icons8-charging-station-64.png';
 import location from '../../assets/StationInfoIcons/location.png';
@@ -18,12 +17,8 @@ import exactlocation from '../../assets/StationInfoIcons/icons8-location-24.png'
 
 const Drawer = ({ isOpen, onClose, selectedStation, nearbyLocations }) => {
   const [isFavorite, setIsFavorite] = useState(false);
-  const [photo, setPhoto] = useState(null);
-  const [mediaItems, setMediaItems] = useState(selectedStation?.MediaItems || []);
-  const [placePhotos, setPlacePhotos] = useState([]);
 
   const user = auth.currentUser;
-  const storage = getStorage();
 
   useEffect(() => {
     const fetchFavoriteStatus = async () => {
@@ -39,64 +34,21 @@ const Drawer = ({ isOpen, onClose, selectedStation, nearbyLocations }) => {
     fetchFavoriteStatus();
   }, [user, selectedStation]);
 
-  useEffect(() => {
-    if (selectedStation) {
-      fetchPlaceDetails(selectedStation.AddressInfo.Title);
-    }
-  }, [selectedStation]);
-
-  const fetchPlaceDetails = (placeName) => {
-    if (!window.google || !window.google.maps || !window.google.maps.places) {
-      console.error("Google Places API is not available");
-      return;
-    }
-
-    const service = new window.google.maps.places.PlacesService(document.createElement('div'));
-    service.textSearch({ query: placeName }, (results, status) => {
-      if (status === window.google.maps.places.PlacesServiceStatus.OK && results.length > 0) {
-        const placeId = results[0].place_id;
-        service.getDetails({ placeId }, (place, status) => {
-          if (status === window.google.maps.places.PlacesServiceStatus.OK && place.photos) {
-            const photos = place.photos.map(photo => photo.getUrl());
-            setPlacePhotos(photos);
-          }
-        });
-      }
-    });
-  };
-
   const handleFavoriteToggle = async () => {
     try {
       const docRef = doc(db, 'favorites', `${user.uid}_${selectedStation.ID}`);
       await setDoc(docRef, {
         userId: user.uid,
         stationId: selectedStation.ID,
-        isFavorite: !isFavorite
-      });
+        isFavorite: !isFavorite,
+        operatorTitle: selectedStation?.OperatorInfo?.Title || "N/A",
+        powerKW: selectedStation?.Connections[0]?.PowerKW || "N/A",
+        address: selectedStation?.AddressInfo?.AddressLine1 || "N/A",
+        status: selectedStation?.StatusType?.Title || "N/A"
+      }, { merge: true });
       setIsFavorite(!isFavorite);
     } catch (error) {
       console.error("Error updating favorite status: ", error);
-    }
-  };
-
-  const handlePhotoUpload = async (e) => {
-    if (e.target.files[0]) {
-      const file = e.target.files[0];
-      const storageRef = ref(storage, `station_photos/${selectedStation.ID}/${file.name}`);
-      await uploadBytes(storageRef, file);
-      const downloadURL = await getDownloadURL(storageRef);
-
-      const newMediaItem = {
-        ImageURL: downloadURL,
-      };
-
-      const updatedMediaItems = [...mediaItems, newMediaItem];
-      setMediaItems(updatedMediaItems);
-
-      const stationDocRef = doc(db, 'stations', selectedStation.ID);
-      await updateDoc(stationDocRef, {
-        MediaItems: updatedMediaItems,
-      });
     }
   };
 
@@ -116,7 +68,7 @@ const Drawer = ({ isOpen, onClose, selectedStation, nearbyLocations }) => {
         animate={{ x: isOpen ? 0 : '-100%' }}
         transition={{ type: 'tween', duration: 0.3 }}
       >
-        <div className="flex justify-between items-center p-4 bg-zinc-800 text-white">
+        <div className="flex justify-between items-center p-4 bg-gray-800 text-white">
           <h2 className="text-xl font-bold">Station Info</h2>
           <button onClick={onClose} className="text-white">
             <svg
@@ -135,7 +87,7 @@ const Drawer = ({ isOpen, onClose, selectedStation, nearbyLocations }) => {
         {/* Charging Station Picture */}
         <div className='w-full h-[200px] relative'>
           <img
-            src={placePhotos.length > 0 ? placePhotos[0] : "https://images.unsplash.com/photo-1707341597123-c53bbb7e7f93?w=1200&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8ZXYlMjBzdGF0aW9ufGVufDB8fDB8fHww"}
+            src="https://images.unsplash.com/photo-1707341597123-c53bbb7e7f93?w=1200&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8ZXYlMjBzdGF0aW9ufGVufDB8fDB8fHww"
             alt="Station"
             className="w-full h-[200px] object-cover"
           />
@@ -239,18 +191,18 @@ const Drawer = ({ isOpen, onClose, selectedStation, nearbyLocations }) => {
             <h3 className='font-bold'>Photos</h3>
             <label className="cursor-pointer">
               <MdAddPhotoAlternate size={24} />
-              <input type="file" className="hidden" onChange={handlePhotoUpload} />
+              {/* <input type="file" className="hidden" onChange={handlePhotoUpload} /> */}
             </label>
             <span>See All</span>
           </div>
           {/* Photos Container */}
-          <div className='w-full flex gap-2 overflow-x-auto flex-grow-1 pt-5'>
+          {/* <div className='w-full flex gap-2 overflow-x-auto flex-grow-1 pt-5'>
             {mediaItems.map((media, index) => (
               <div key={index} className='border w-[120px] h-[120px] flex-shrink-0'>
                 <img src={media.ImageURL} alt={`Station Media ${index}`} className='w-full h-full object-cover' />
               </div>
             ))}
-          </div>
+          </div> */}
         </div>
 
         {/* Comments */}
