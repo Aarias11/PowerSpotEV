@@ -116,7 +116,7 @@ const Drawer = ({ isOpen, onClose, selectedStation, nearbyLocations }) => {
         animate={{ x: isOpen ? 0 : '-100%' }}
         transition={{ type: 'tween', duration: 0.3 }}
       >
-        <div className="flex justify-between items-center p-4 bg-gray-800 text-white">
+        <div className="flex justify-between items-center p-4 bg-zinc-800 text-white">
           <h2 className="text-xl font-bold">Station Info</h2>
           <button onClick={onClose} className="text-white">
             <svg

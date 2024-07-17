@@ -2,11 +2,20 @@ import React, { useEffect, useState } from 'react';
 import Sidebar from '../../components/Sidebar/Sidebar';
 import { auth, db } from '../../firebase';
 import { doc, getDoc, collection, getDocs } from 'firebase/firestore';
+import Loading from '../Loading/Loading';
 
 const Dashboard = () => {
   const [userInfo, setUserInfo] = useState({});
   const [favoriteStations, setFavoriteStations] = useState([]);
   const [lastSignInTime, setLastSignInTime] = useState('');
+  const [isLoading, setIsLoading] = useState(true)
+
+
+  useEffect(() => {
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 2000)
+  }, [])
 
   useEffect(() => {
     const fetchUserInfo = async () => {
@@ -74,6 +83,10 @@ const Dashboard = () => {
 
     fetchUserInfo();
   }, []);
+
+  if (isLoading) {
+    return <Loading />
+  }
 
   return (
     <div className="flex h-screen bg-zinc-800 text-white">

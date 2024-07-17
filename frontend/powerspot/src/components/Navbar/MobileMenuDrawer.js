@@ -6,7 +6,7 @@ function MobileMenuDrawer({ isOpen, toggleMenu, setIsLoginOpen, setIsSignupOpen 
     <div className={`fixed inset-0 bg-gray-800 bg-opacity-75 z-50 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         <div className={`fixed inset-y-0 left-0 w-80 bg-white shadow-lg z-50 ${isOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300`}>
             <div className='flex justify-between items-center p-4'>
-                <h2 className='text-xl font-bold'>Menu</h2>
+                <h2 className='text-xl font-bold text-black'>Menu</h2>
                 <button className='text-gray-700'
                 onClick={toggleMenu}>
                     <svg className="w-6 h-6" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">

@@ -1,10 +1,25 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaBolt, FaGlobe, FaLeaf } from 'react-icons/fa';
 import LottieChargingAnimation from './Charging/LottieChargingAnimation';
 import LottieCommunityAnimation from './Community/LottieCommunityAnimation';
 import LottieSustainabilityAnimation from './Sustainability/LottieSustainabilityAnimation';
+import Loading from '../Loading/Loading';
 
 const About = () => {
+  const [ isLoading, setIsLoading ] = useState(true)
+
+  useEffect(() => {
+    setTimeout(() => [
+      setIsLoading(false)
+    ], 500)
+  }, [])
+
+  if (isLoading) {
+    return <Loading />
+  }
+
+
+
   return (
     <div className="w-full min-h-screen bg-[#131313] text-slate-300 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

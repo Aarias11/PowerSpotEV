@@ -59,10 +59,10 @@ const Signup = ({ isOpen, onClose }) => {
                   value={username}
                   placeholder="john.doe11"
                   onChange={(e) => setUsername(e.target.value)}
-                  className="w-full h-[40px] pl-5 py-2 border rounded-full bg-[#02151F] text-white text-[12px]"
+                  className="w-full h-[40px] pl-5 pt-1.5 border rounded-full bg-[#02151F] text-white text-[12px] focus:outline-none focus:border-blue-500"
                   required
                 />
-                <FaUser className="absolute top-7 right-5 text-white" />
+                <FaUser className="absolute top-7 right-5 mt-0.5 text-white" />
               </div>
               {/* Email */}
               <div className="mb-4 relative">
@@ -72,10 +72,10 @@ const Signup = ({ isOpen, onClose }) => {
                   value={email}
                   placeholder="john.doe@example.com"
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full h-[40px] pl-5 py-2 border rounded-full bg-[#02151F] text-white text-[12px]"
+                  className="w-full h-[40px] pl-5 pt-1.5 border rounded-full bg-[#02151F] text-white text-[12px] focus:outline-none focus:border-blue-500"
                   required
                 />
-                <FaEnvelope className="absolute top-7 right-5  text-white" />
+                <FaEnvelope className="absolute top-7 mt-0.5 right-5  text-white" />
               </div>
               {/* Password */}
               <div className="mb-4 relative">
@@ -85,10 +85,10 @@ const Signup = ({ isOpen, onClose }) => {
                   value={password}
                   placeholder="*********"
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full h-[40px] pl-5 py-2 border rounded-full bg-[#02151F] text-white text-[12px]"
+                  className="w-full h-[40px] pl-5 pt-1.5 border rounded-full bg-[#02151F] text-white text-[12px] focus:outline-none focus:border-blue-500"
                   required
                 />
-                <div className="absolute top-7 right-5  text-white cursor-pointer" onClick={togglePasswordVisibility}>
+                <div className="absolute top-7 right-5 mt-0.5  text-white cursor-pointer" onClick={togglePasswordVisibility}>
                   {showPassword ? <FaEyeSlash /> : <FaEye />}
                 </div>
               </div>
@@ -103,14 +103,14 @@ const Signup = ({ isOpen, onClose }) => {
             </div>
             <div className="w-full flex flex-col justify-center items-center gap-4 mt-5 relative">
               <button
-                className="w-[200px] h-[40px] border rounded-full text-white text-[12px] flex justify-center items-center gap-4"
+                className="w-[200px] h-[40px] border rounded-full text-white text-[12px] flex justify-center items-center gap-4 pt-1"
                 onClick={handleGoogleSignup}
               >
-                <img className="w-5 h-5" src={Googleicon} alt="Google" />
+                <img className="w-5 h-5 translate-y-[-4px]" src={Googleicon} alt="Google" />
                 Signup with Google
               </button>
-              <button className="w-[200px] h-[40px] border rounded-full text-black bg-white text-[12px] flex justify-center items-center gap-4">
-                <img className="w-5 h-5" src={Apple} alt="Apple" />
+              <button className="w-[200px] h-[40px] border rounded-full text-black bg-white text-[12px] flex justify-center items-center gap-4 pt-1">
+                <img className="w-5 h-5 translate-y-[-4px]" src={Apple} alt="Apple" />
                 Signup with Apple
               </button>
             </div>

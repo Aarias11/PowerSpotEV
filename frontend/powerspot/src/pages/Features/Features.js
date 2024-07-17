@@ -1,8 +1,22 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import LottieAnimation from "./LottieAnimation";
 import { FaRocket, FaShieldAlt, FaUsers } from 'react-icons/fa';
+import Loading from "../Loading/Loading";
 
 function Features() {
+  const [ isLoading, setIsLoading ] =  useState(true)
+
+
+  useEffect(() => {
+    setTimeout(() => {
+      setIsLoading(false)
+    }, 500)
+  }, [])
+
+  if (isLoading) {
+    return <Loading />
+  }
+
   return (
     <div className="w-full min-h-screen bg-[#131313] text-white px-6 md:px-28 flex justify-center items-center">
       {/* Container */}

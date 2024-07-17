@@ -1,0 +1,11 @@
+.lottie-container {
+    width: 100%;
+    max-width: 650px;
+    height: auto;
+    margin: 0 auto; /* Center the animation horizontally */
+  }
+  
+  .lottie-container > div {
+    width: 100%;
+    height: 100%;
+  }
