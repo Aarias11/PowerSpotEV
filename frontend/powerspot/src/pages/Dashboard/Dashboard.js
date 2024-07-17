@@ -3,6 +3,7 @@ import Sidebar from '../../components/Sidebar/Sidebar';
 import { auth, db } from '../../firebase';
 import { doc, getDoc, collection, getDocs } from 'firebase/firestore';
 import Loading from '../Loading/Loading';
+import { Link } from 'react-router-dom';
 
 const Dashboard = () => {
   const [userInfo, setUserInfo] = useState({});
@@ -107,7 +108,9 @@ const Dashboard = () => {
               <p className="text-slate-300/90 mt-2">Username: {userInfo.name || 'N/A'}</p>
               <p className="text-slate-300/90">Email: {userInfo.email || 'N/A'}</p>
               <p className="text-slate-300/90">EV Car: {userInfo.evCar || 'N/A'}</p>
+              <Link to='/profile-setup'>
               <button className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-lg">Edit Profile</button>
+              </Link>
             </div>
             <div className="bg-zinc-900/90 p-6 rounded-lg shadow-lg">
               <h2 className="text-xl font-bold text-slate-300">Favorite Stations</h2>

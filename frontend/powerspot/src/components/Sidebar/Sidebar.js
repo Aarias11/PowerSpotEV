@@ -7,8 +7,9 @@ import { auth } from '../../firebase'; // Ensure the correct path to your fireba
 
 const Sidebar = () => {
   const { signout, currentUser } = useAuth();
-  const [profilePic, setProfilePic] = useState('');
+  const [profilePicURL, setProfilePicURL] = useState('');
   const [email, setEmail] = useState('');
+  const [bio, setBio] = useState('');
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -18,9 +19,9 @@ const Sidebar = () => {
         const userDoc = await getDoc(userDocRef);
         if (userDoc.exists()) {
           const userData = userDoc.data();
-          setProfilePic(userData.profilePic || '');
+          setProfilePicURL(userData.profilePic || '');
           setEmail(userData.email || '');
-          console.log(currentUser)
+          setBio(userData.bio || '');
         }
       } catch (error) {
         console.error("Error fetching user profile: ", error);
@@ -38,11 +39,12 @@ const Sidebar = () => {
       <div className="flex flex-col items-center mb-6">
         <img
           className="w-[110px] h-[110px] border rounded-full mb-4 object-cover"
-          src={profilePic || 'https://via.placeholder.com/110'}
+          src={profilePicURL || 'https://via.placeholder.com/110'}
           alt="User Profile"
         />
         <h2 className="text-xl font-bold">{currentUser.displayName || 'Username'}</h2>
-        <p className="text-gray-400">{email || currentUser.email}</p>
+        <p className="text-slate-300/90">{email || currentUser.email}</p>
+        <p className="text-slate-300/90 px-6 text-center">{bio || currentUser.bio}</p>
       </div>
       {/* Navigation */}
       <nav className="flex-1">
@@ -79,16 +81,6 @@ const Sidebar = () => {
           </li>
         </ul>
       </nav>
-      {/* Sign Out */}
-      <div className="mt-4">
-        <button
-          onClick={signout}
-          className="w-full flex items-center justify-center gap-3 px-4 py-2 bg-red-500 hover:bg-red-400 text-white rounded transition"
-        >
-          <FaSignOutAlt />
-          <span>Sign Out</span>
-        </button>
-      </div>
     </aside>
   );
 };
