@@ -8,7 +8,7 @@ import {
 import axios from "axios";
 import _ from "lodash";
 import Drawer from "../../components/Drawer/Drawer";
-import { FaSearch  } from "react-icons/fa";
+import { FaSearch, FaRegHeart, FaHeart  } from "react-icons/fa";
 import { IoLocation } from "react-icons/io5";
 
 const containerStyle = {
@@ -193,7 +193,7 @@ const Home = () => {
       <div style={containerStyle}>
         {/* Loading Indicator */}
         {loading && (
-          <div className="absolute top-0 left-0 w-full h-full bg-transparent flex items-center justify-center z-50">
+          <div className="absolute top-0 left-0 w-full h-screen bg-transparent flex items-center justify-center z-50">
             <div className="spinner-border text-primary" role="status">
               <span className="sr-only">Loading...</span>
             </div>

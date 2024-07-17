@@ -7,6 +7,9 @@ import ProfileSetup from './pages/ProfileSetup/ProfileSetup';
 import PrivateRoute from './components/AuthContext/PrivateRoute';
 import { AuthProvider } from './components/AuthContext/AuthContext';
 import Login from './components/Login/Login'; // Ensure you have this component
+import Features from './pages/Features/Features';
+import Footer from './components/Footer/Footer';
+import About from './pages/About/About';
 
 function App() {
   return (
@@ -18,7 +21,10 @@ function App() {
           <Route path="/dashboard" element={<PrivateRoute element={Dashboard} />} />
           <Route path="/profile-setup" element={<ProfileSetup />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/features" element={<Features />} />
+          <Route path="/about" element={<About />} />
         </Routes>
+        <Footer />
       </div>
     </AuthProvider>
   );

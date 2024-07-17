@@ -20,6 +20,7 @@ const Sidebar = () => {
           const userData = userDoc.data();
           setProfilePic(userData.profilePic || '');
           setEmail(userData.email || '');
+          console.log(currentUser)
         }
       } catch (error) {
         console.error("Error fetching user profile: ", error);
@@ -32,7 +33,7 @@ const Sidebar = () => {
   }, [currentUser]);
 
   return (
-    <aside className="w-[300px] h-full bg-gray-800 text-white p-4 flex flex-col pt-24">
+    <aside className="w-[300px] h-full bg-zinc-900 text-white p-4 flex flex-col pt-24">
       {/* User Info */}
       <div className="flex flex-col items-center mb-6">
         <img

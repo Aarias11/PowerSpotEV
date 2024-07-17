@@ -3,7 +3,7 @@ import Login from '../Login/Login';
 import Signup from '../Signup/Signup';
 import { useAuth } from '../AuthContext/AuthContext'; // Correct path to your AuthContext
 import { Link } from 'react-router-dom';
-
+import Logo from '../../assets/Logo/PowerSpotEV Background Removed.png'
 const Navbar = () => {
   const { currentUser, signout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
@@ -15,21 +15,31 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-white shadow-lg fixed w-full h-[60px] z-50">
-      <div className="max-w-6xl mx-auto px-4">
+    <nav className="bg-zinc-900 text-white shadow-lg  w-full h-[70px] z-50 px-6 md:px-28 flex justify-center items-center">
+      <div className="w-full">
         <div className="flex justify-between">
           <div className="flex space-x-4">
             {/* Logo */}
             <div className='flex items-center md:flex md:items-center'>
-              <a href="/" className="flex items-center px-2 text-gray-700">
-                <span className="font-bold">PowerSpot EV</span>
+              <a href="/" className="flex items-center px-2 text-[26px]">
+              <img className='w-16 h-16' src={Logo} />
+                {/* <span className="font-bold">PowerSpot EV</span> */}
               </a>
             </div>
             {/* Primary Nav */}
-            <ul className="hidden md:flex items-center space-x-1">
-              <a href="/" className=" px-3 text-gray-700 hover:text-gray-900">Home</a>
-              <a href="/features" className="py-5 px-3 text-gray-700 hover:text-gray-900">Features</a>
-              <a href="/pricing" className="py-5 px-3 text-gray-700 hover:text-gray-900">Pricing</a>
+            <ul className="hidden md:flex items-center space-x-1 text-white">
+              <Link>
+              <li className='className="py-5 px-3  hover:text-slate-400"'>Home</li>
+              </Link>
+              <Link to='/features'>
+              <li className='className="py-5 px-3  hover:text-slate-400"'>
+                Features
+              </li>
+              </Link>
+              <Link to='/about'>
+              <li className='className="py-5 px-3  hover:text-slate-400"'>About</li>
+              </Link>
+              
               
             </ul>
           </div>
