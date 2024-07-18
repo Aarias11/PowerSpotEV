@@ -47,7 +47,7 @@ const Home = () => {
 
   const fetchStations = async (center) => {
     if (!center) return;
-    console.log("Fetching stations with center:", center);
+    // console.log("Fetching stations with center:", center);
     setLoading(true); // Set loading to true when fetching starts
     loadingBarRef.current.continuousStart(); // Start the loading bar
     try {
@@ -61,7 +61,7 @@ const Home = () => {
           maxresults: 50, // Limit the number of stations to fetch
         },
       });
-      console.log("Stations response:", response.data);
+      // console.log("Stations response:", response.data);
       if (response.data && response.data.length > 0) {
         setStations(response.data);
       } else {
@@ -78,7 +78,7 @@ const Home = () => {
   };
 
   const fetchCity = async (lat, lng) => {
-    console.log("Fetching city with coordinates:", lat, lng);
+    // console.log("Fetching city with coordinates:", lat, lng);
     try {
       const response = await axios.get(
         "https://maps.googleapis.com/maps/api/geocode/json",
@@ -94,7 +94,7 @@ const Home = () => {
         component.types.includes("locality")
       );
       const cityName = cityComponent ? cityComponent.long_name : "";
-      console.log("City name:", cityName);
+      // console.log("City name:", cityName);
       setCity(cityName);
     } catch (error) {
       console.error("Error fetching city:", error);
@@ -114,7 +114,7 @@ const Home = () => {
           maxresults: 5, // Limit the number of stations to fetch
         },
       });
-      console.log("Nearby locations response:", response.data);
+      // console.log("Nearby locations response:", response.data);
       if (response.data && response.data.length > 0) {
         setNearbyLocations(response.data);
       } else {
