@@ -1,24 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { IoLocation } from "react-icons/io5";
-import { FaRegHeart, FaHeart } from "react-icons/fa";
-import { MdAddPhotoAlternate } from "react-icons/md";
+import { IoLocationOutline } from "react-icons/io5";
+import { FaRegHeart, FaHeart, FaPlug, FaPhone, FaMapMarkerAlt, FaDollarSign } from "react-icons/fa";
+import { MdAddPhotoAlternate, MdMessage, MdDirections } from "react-icons/md";
 import { Link } from 'react-router-dom';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, arrayUnion } from 'firebase/firestore';
+import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { auth, db } from '../../firebase';
-import chargingstation from '../../assets/StationInfoIcons/icons8-charging-station-64.png';
-import location from '../../assets/StationInfoIcons/location.png';
-import parkingstation from '../../assets/StationInfoIcons/icons8-charging-station-50.png';
-import status from '../../assets/StationInfoIcons/icons8-status-30.png';
-import dollar from '../../assets/StationInfoIcons/icons8-dollar-50.png';
-import telephone from '../../assets/StationInfoIcons/icons8-telephone-50.png';
-import daily from '../../assets/StationInfoIcons/icons8-last-24-hours-50.png';
-import exactlocation from '../../assets/StationInfoIcons/icons8-location-24.png';
+import Modal from '../../components/Modal/Modal';
 
 const Drawer = ({ isOpen, onClose, selectedStation, nearbyLocations }) => {
   const [isFavorite, setIsFavorite] = useState(false);
+  const [photos, setPhotos] = useState([]); // State to hold the uploaded photos
+  const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
+  const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
+  const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(0);
+  const [comments, setComments] = useState([]); // State to hold comments
+  const [newComment, setNewComment] = useState("");
+  const [userCar, setUserCar] = useState(""); // State to hold the user's EV car
 
   const user = auth.currentUser;
+  const storage = getStorage();
 
   useEffect(() => {
     const fetchFavoriteStatus = async () => {
@@ -34,21 +36,124 @@ const Drawer = ({ isOpen, onClose, selectedStation, nearbyLocations }) => {
     fetchFavoriteStatus();
   }, [user, selectedStation]);
 
+  useEffect(() => {
+    const fetchPhotosAndComments = async () => {
+      if (selectedStation) {
+        const docRef = doc(db, 'stations', `${selectedStation.ID}`);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          setPhotos(docSnap.data().photos || []);
+          setComments(docSnap.data().comments || []);
+        }
+      }
+    };
+
+    fetchPhotosAndComments();
+  }, [selectedStation]);
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (user) {
+        const docRef = doc(db, 'users', user.uid);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          setUserCar(docSnap.data().evCar || "Unknown EV Car");
+        }
+      }
+    };
+
+    fetchUserProfile();
+  }, [user]);
+
   const handleFavoriteToggle = async () => {
     try {
-      const docRef = doc(db, 'favorites', `${user.uid}_${selectedStation.ID}`);
-      await setDoc(docRef, {
-        userId: user.uid,
-        stationId: selectedStation.ID,
-        isFavorite: !isFavorite,
-        operatorTitle: selectedStation?.OperatorInfo?.Title || "N/A",
-        powerKW: selectedStation?.Connections[0]?.PowerKW || "N/A",
-        address: selectedStation?.AddressInfo?.AddressLine1 || "N/A",
-        status: selectedStation?.StatusType?.Title || "N/A"
-      }, { merge: true });
-      setIsFavorite(!isFavorite);
+      if (user && selectedStation) {
+        const docRef = doc(db, 'favorites', `${user.uid}_${selectedStation.ID}`);
+        await setDoc(docRef, {
+          userId: user.uid,
+          stationId: selectedStation.ID,
+          isFavorite: !isFavorite,
+          operatorTitle: selectedStation?.OperatorInfo?.Title || "N/A",
+          powerKW: selectedStation?.Connections[0]?.PowerKW || "N/A",
+          address: selectedStation?.AddressInfo?.AddressLine1 || "N/A",
+          status: selectedStation?.StatusType?.Title || "N/A"
+        }, { merge: true });
+        setIsFavorite(!isFavorite);
+      }
     } catch (error) {
       console.error("Error updating favorite status: ", error);
+    }
+  };
+
+  const handlePhotoUpload = async (event) => {
+    const files = Array.from(event.target.files);
+    files.forEach(async (file) => {
+      const storageRef = ref(storage, `stations/${selectedStation.ID}/${file.name}`);
+      const uploadTask = uploadBytesResumable(storageRef, file);
+
+      uploadTask.on(
+        'state_changed',
+        (snapshot) => {
+          // Handle progress
+        },
+        (error) => {
+          console.error('Error uploading file:', error);
+        },
+        async () => {
+          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+          setPhotos((prevPhotos) => [...prevPhotos, downloadURL]);
+          await updateDoc(doc(db, 'stations', `${selectedStation.ID}`), {
+            photos: arrayUnion(downloadURL)
+          });
+        }
+      );
+    });
+  };
+
+  const getDirections = (lat, lng) => {
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+    window.open(url, "_blank");
+  };
+
+  const handlePhotoClick = (index) => {
+    setSelectedPhotoIndex(index);
+    setIsPhotoModalOpen(true);
+  };
+
+  const handlePrevPhoto = () => {
+    setSelectedPhotoIndex((prevIndex) => (prevIndex > 0 ? prevIndex - 1 : photos.length - 1));
+  };
+
+  const handleNextPhoto = () => {
+    setSelectedPhotoIndex((prevIndex) => (prevIndex < photos.length - 1 ? prevIndex + 1 : 0));
+  };
+
+  const handleAddComment = async () => {
+    if (user && selectedStation) {
+      const newCommentData = {
+        userName: user.displayName || "Anonymous",
+        profilePicture: user.photoURL || "https://via.placeholder.com/150",
+        text: newComment,
+        userCar: userCar,
+        timestamp: new Date().toISOString(),
+      };
+
+      const docRef = doc(db, 'stations', `${selectedStation.ID}`);
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        await updateDoc(docRef, {
+          comments: arrayUnion(newCommentData),
+        });
+      } else {
+        await setDoc(docRef, {
+          comments: [newCommentData],
+        });
+      }
+
+      setComments((prevComments) => [...prevComments, newCommentData]);
+      setNewComment("");
+      setIsCommentModalOpen(false);
     }
   };
 
@@ -63,13 +168,13 @@ const Drawer = ({ isOpen, onClose, selectedStation, nearbyLocations }) => {
         style={{ pointerEvents: isOpen ? 'auto' : 'none' }}
       ></motion.div>
       <motion.div
-        className="fixed inset-y-0 left-0 w-[400px] bg-white shadow-lg z-50 overflow-y-auto"
+        className="fixed inset-y-0 left-0 w-[400px] bg-[#131313] shadow-lg z-50 overflow-y-auto"
         initial={{ x: '-100%' }}
         animate={{ x: isOpen ? 0 : '-100%' }}
         transition={{ type: 'tween', duration: 0.3 }}
       >
-        <div className="flex justify-between items-center p-4 bg-gray-800 text-white">
-          <h2 className="text-xl font-bold">Station Info</h2>
+        <div className="flex justify-between items-center p-4 bg-[#131313] text-white">
+          <h2 className="text-xl font-bold text-slate-300">Station Info</h2>
           <button onClick={onClose} className="text-white">
             <svg
               className="w-6 h-6"
@@ -85,7 +190,7 @@ const Drawer = ({ isOpen, onClose, selectedStation, nearbyLocations }) => {
           </button>
         </div>
         {/* Charging Station Picture */}
-        <div className='w-full h-[200px] relative'>
+        <div className='w-full h-[140px] relative'>
           <img
             src="https://images.unsplash.com/photo-1707341597123-c53bbb7e7f93?w=1200&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8ZXYlMjBzdGF0aW9ufGVufDB8fDB8fHww"
             alt="Station"
@@ -96,26 +201,26 @@ const Drawer = ({ isOpen, onClose, selectedStation, nearbyLocations }) => {
           </button>
         </div>
         {/* Station Info Card Container */}
-        <div className="w-full h-[100px] flex justify-center">
-          <div className="w-[374px] h-[145px] translate-y-[-70px] bg-[#131313]/80 rounded-2xl p-4 text-white">
+        <div className="w-full h-auto flex justify-center">
+          <div className="w-[374px] h-auto translate-y-[-15px] bg-zinc-800/70 rounded-2xl p-4 text-slate-300">
             {/* Card Content */}
-            <div className="w-full h-full flex flex-col justify-between">
+            <div className="w-full flex flex-col justify-between">
               {/* Electric Company and kW offered Container */}
               <div className="flex justify-between">
                 <Link to={selectedStation?.OperatorInfo?.WebsiteURL || "N/A"}>
-                  <h4 className='text-[16px] font-light'>{selectedStation?.OperatorInfo?.Title || "N/A"}</h4>
+                  <h4 className='text-[16px] font-light text-slate-300/90'>{selectedStation?.OperatorInfo?.Title || "N/A"}</h4>
                 </Link>
-                <h4 className='text-[16px] font-light'>{selectedStation?.Connections[0]?.PowerKW || "N/A"} kW</h4>
+                <h4 className='text-[16px] font-light text-slate-300/90'>{selectedStation?.Connections[0]?.PowerKW || "N/A"} kW</h4>
               </div>
               {/* Selected Station Container */}
               <div>
-                <h2 className="text-3xl font-semibold text-center">
+                <h2 className="text-3xl font-semibold text-center text-slate-300">
                   {selectedStation?.AddressInfo?.Title}
                 </h2>
               </div>
               {/* Types of Charges Container */}
               <div className="">
-                <h4 className='text-[16px] font-light'>
+                <h4 className='text-[16px] font-light text-slate-300/90'>
                   {selectedStation?.Connections?.map(
                     (conn) => conn.ConnectionType?.Title
                   ).join(", ")}
@@ -124,62 +229,78 @@ const Drawer = ({ isOpen, onClose, selectedStation, nearbyLocations }) => {
             </div>
           </div>
         </div>
+        {/* Get Directions Icon */}
+        <div className='px-5'>
+          <button
+            onClick={() =>
+              getDirections(
+                selectedStation.AddressInfo.Latitude,
+                selectedStation.AddressInfo.Longitude
+              )
+            }
+            className="mt-1 p-3 py-2 bg-blue-500 text-white rounded-full flex justify-center gap-2 items-center"
+          >
+            Get Directions
+            <MdDirections className='translate-y-[-2px]' />
+          </button>
+        </div>
         {/* More Station Info Container */}
-        <div className='w-full h-auto px-5'>
-          <h3 className='font-bold text-[18px]'>Location Information</h3>
+        <div className='w-full h-auto px-5 mt-5'>
+          <h3 className='font-bold text-[18px] text-slate-300'>Location Information</h3>
           {/* Address */}
           <div className='flex gap-4 items-center p-2'>
-            <img className='w-5 h-5' src={location} alt="Location" />
-            <span className='font-light text-[14px] translate-y-[3px]'>Address: {selectedStation?.AddressInfo?.AddressLine1 || "N/A"}</span>
+            <IoLocationOutline className='w-5 h-5 text-slate-300/90' />
+            <span className='font-light text-[14px] translate-y-[3px] text-slate-300/90'>Address: {selectedStation?.AddressInfo?.AddressLine1 || "N/A"}</span>
           </div>
           {/* Access */}
           <div className='flex gap-4 items-center p-2'>
-            <img className='w-5 h-5' src={daily} alt="Access" />
-            <span className='font-light text-[14px] translate-y-[3px]'>Access: {selectedStation?.AddressInfo?.AccessComments || "N/A"}</span>
+            <FaMapMarkerAlt className='w-5 h-5 text-slate-300/90' />
+            <span className='font-light text-[14px] translate-y-[3px] text-slate-300/90'>Access: {selectedStation?.AddressInfo?.AccessComments || "N/A"}</span>
           </div>
           {/* Telephone */}
           <div className='flex gap-4 items-center p-2'>
-            <img className='w-5 h-5' src={telephone} alt="Telephone" />
-            <span className='font-light text-[14px] translate-y-[3px]'>Telephone: {selectedStation?.AddressInfo?.ContactTelephone1 || "N/A"}</span>
+            <FaPhone className='w-5 h-5 text-slate-300/90' />
+            <span className='font-light text-[14px] translate-y-[3px] text-slate-300/90'>Telephone: {selectedStation?.AddressInfo?.ContactTelephone1 || "N/A"}</span>
           </div>
+         
         </div>
 
         {/* Plug Info Container */}
         <div className='w-full h-auto px-5 mt-5'>
-          <h3 className='font-bold text-[18px]'>Plug Information</h3>
+          <h3 className='font-bold text-[18px] text-slate-300'>Plug Information</h3>
           {/* Charging Type */}
           <div className='flex gap-4 items-center p-2'>
-            <img className='w-5 h-5' src={parkingstation} alt="Charging Type" />
-            <span className='font-light text-[14px] translate-y-[3px]'>Charging Type: {selectedStation?.Connections?.map(
+            <FaPlug className='w-5 h-5 text-slate-300/90' />
+            <span className='font-light text-[14px] translate-y-[3px] text-slate-300/90'>Charging Type: {selectedStation?.Connections?.map(
               (conn) => conn.ConnectionType?.Title
             ).join(", ") || "N/A"}</span>
           </div>
           {/* Price */}
           <div className='flex gap-4 items-center p-2'>
-            <img className='w-5 h-5' src={dollar} alt="Price" />
-            <span className='font-light text-[14px] translate-y-[3px]'>Price: {selectedStation?.UsageCost || "N/A"}</span>
+            <FaDollarSign className='w-5 h-5 text-slate-300/90' />
+            <span className='font-light text-[14px] translate-y-[3px] text-slate-300/90'>Price: {selectedStation?.UsageCost || "N/A"}</span>
           </div>
           {/* Status */}
           <div className='flex gap-4 items-center p-2'>
-            <img className='w-5 h-5' src={status} alt="Status" />
-            <span className='font-light text-[14px] translate-y-[3px]'>Status: {selectedStation?.StatusType?.Title || "N/A"}</span>
+            <FaMapMarkerAlt className='w-5 h-5 text-slate-300/90' />
+            <span className='font-light text-[14px] translate-y-[3px] text-slate-300/90'>Status: {selectedStation?.StatusType?.Title || "N/A"}</span>
           </div>
           {/* Charging Stations */}
           <div className='flex gap-4 items-center p-2'>
-            <img className='w-5 h-5' src={chargingstation} alt="Charging Stations" />
-            <span className='font-light text-[14px] translate-y-[3px]'>Charging Stations: {selectedStation?.Connections?.length || "N/A"}</span>
+            <FaPlug className='w-5 h-5 text-slate-300/90' />
+            <span className='font-light text-[14px] translate-y-[3px] text-slate-300/90'>Charging Stations: {selectedStation?.Connections?.length || "N/A"}</span>
           </div>
         </div>
 
         {/* Nearby Locations Container */}
         <div className='w-full h-auto px-5 mt-5'>
-          <h3 className='font-bold text-[18px]'>Nearby Locations</h3>
+          <h3 className='font-bold text-[18px] text-slate-300'>Nearby Locations</h3>
           {nearbyLocations.map((location, index) => (
             <div key={index} className='flex gap-4 items-center p-2'>
-              <img className='w-5 h-5 translate-y-[-11px]' src={exactlocation} alt="Nearby Location" />
+              <FaMapMarkerAlt className='w-5 h-5 translate-y-[-11px] text-slate-300/90' />
               <div className='flex flex-col'>
-                <span className='font-semibold text-[14px] translate-y-[3px]'>Address: {location.AddressInfo.AddressLine1}</span>
-                <span className='font-light text-[14px] translate-y-[3px]'>{location.AddressInfo.Title}</span>
+                <span className='font-semibold text-[14px] translate-y-[3px] text-slate-300'>Address: {location.AddressInfo.AddressLine1}</span>
+                <span className='font-light text-[14px] translate-y-[3px] text-slate-300/90'>{location.AddressInfo.Title}</span>
               </div>
             </div>
           ))}
@@ -188,35 +309,93 @@ const Drawer = ({ isOpen, onClose, selectedStation, nearbyLocations }) => {
         {/* Photos */}
         <div className='w-full h-[200px] px-5 mt-5'>
           <div className='flex justify-between items-center'>
-            <h3 className='font-bold'>Photos</h3>
-            <label className="cursor-pointer">
+            <h3 className='font-bold text-slate-300'>Photos</h3>
+            <label className="cursor-pointer text-slate-300/90">
               <MdAddPhotoAlternate size={24} />
-              {/* <input type="file" className="hidden" onChange={handlePhotoUpload} /> */}
+              <input type="file" className="hidden" onChange={handlePhotoUpload} />
             </label>
-            <span>See All</span>
+            <span className='text-slate-300/90'>See All</span>
           </div>
           {/* Photos Container */}
-          {/* <div className='w-full flex gap-2 overflow-x-auto flex-grow-1 pt-5'>
-            {mediaItems.map((media, index) => (
-              <div key={index} className='border w-[120px] h-[120px] flex-shrink-0'>
-                <img src={media.ImageURL} alt={`Station Media ${index}`} className='w-full h-full object-cover' />
+          <div className='w-full flex gap-2 overflow-x-auto flex-grow-1 pt-5'>
+            {photos.map((photo, index) => (
+              <div
+                key={index}
+                className=' w-[120px] h-[120px] flex-shrink-0 cursor-pointer'
+                onClick={() => handlePhotoClick(index)}
+              >
+                <img src={photo} alt={`Station Media ${index}`} className='w-full h-full object-cover rounded-xl' />
               </div>
             ))}
-          </div> */}
+          </div>
         </div>
 
         {/* Comments */}
-        <div className='w-full h-auto px-5 mt-5'>
-          <h3 className='font-bold'>Comments</h3>
-          <div className='w-full h-auto'>
-            {selectedStation?.UserComments?.map((comment, index) => (
-              <div key={index} className='p-2 border-b border-gray-200'>
-                <p className='font-light text-[14px]'><strong>{comment.UserName}:</strong> {comment.Comment}</p>
-              </div>
-            ))}
+        <div className='w-full h-[300px] px-5 mt-5'>
+          <div className='flex justify-between items-center'>
+            <h3 className='font-bold text-slate-300'>Comments</h3>
+            <button
+              onClick={() => setIsCommentModalOpen(true)}
+              className="text-slate-300"
+            >
+              <MdMessage size={20} />
+            </button>
           </div>
+          {comments.map((comment, index) => (
+            <div key={index} className='w-full h-auto flex p-2 mb-2'>
+              <div className='w-[70px] h-[60px] rounded-full overflow-hidden mt-4'>
+                <img src={comment.profilePicture} alt="Profile" className='w-full h-full object-cover' />
+              </div>
+              <div className='w-full h-auto text-white p-2 rounded-lg mt-4'>
+                <div className='flex justify-between'>
+                  <p className='font-semibold'>{comment.userName}</p>
+                  <p>{new Date(comment.timestamp).toLocaleString()}</p>
+                </div>
+                <p>{comment.userCar}</p>
+                <p className='text-[14px]'>{comment.text}</p>
+              </div>
+            </div>
+          ))}
         </div>
       </motion.div>
+      <Modal isOpen={isPhotoModalOpen} onClose={() => setIsPhotoModalOpen(false)}>
+        <div className="flex justify-center items-center w-full h-full relative">
+          <button
+            onClick={handlePrevPhoto}
+            className="absolute w-10 h-10 left-0 top-1/2 transform -translate-y-1/2 bg-blue-500/50 hover:bg-blue-700/80 text-white rounded-full p-2"
+          >
+            &lt;
+          </button>
+          <img src={photos[selectedPhotoIndex]} alt="Selected" className="w-[750px] h-auto rounded-lg max-w-full max-h-full" />
+          <button
+            onClick={handleNextPhoto}
+            className="absolute w-10 h-10 right-0 top-1/2 transform -translate-y-1/2 bg-blue-500/50 hover:bg-blue-700/80 text-white rounded-full p-2"
+          >
+            &gt;
+          </button>
+        </div>
+      </Modal>
+      <Modal isOpen={isCommentModalOpen} onClose={() => setIsCommentModalOpen(false)}>
+        <div className="flex items-center p-4 bg-[#131313] rounded-lg">
+          <div className="w-[60px] h-[60px] rounded-full border overflow-hidden mr-4">
+            <img src={user?.photoURL || "https://via.placeholder.com/150"} alt="Profile" className='w-full h-full object-cover' />
+          </div>
+          <textarea
+            value={newComment}
+            onChange={(e) => setNewComment(e.target.value)}
+            className="w-full h-[100px] p-2 bg-zinc-800/70 rounded-lg text-white resize-none"
+            placeholder="Write your comment here..."
+          ></textarea>
+        </div>
+        <div className="flex justify-end p-4">
+          <button
+            onClick={handleAddComment}
+            className="px-4 py-2 bg-blue-500 text-white rounded-full"
+          >
+            Submit
+          </button>
+        </div>
+      </Modal>
     </>
   );
 };

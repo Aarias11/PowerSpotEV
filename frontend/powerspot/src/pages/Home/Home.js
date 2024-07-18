@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import {
   GoogleMap,
   LoadScript,
   Marker,
   InfoWindow,
+  Autocomplete,
 } from "@react-google-maps/api";
 import axios from "axios";
 import _ from "lodash";
@@ -19,10 +20,8 @@ const containerStyle = {
   position: "relative",
 };
 
-const defaultCenter = {
-  lat: 40.678910269304055, // Default center, e.g., Brooklyn, NY
-  lng: -73.91410561491149,
-};
+// Define the libraries array outside the component
+const libraries = ['places'];
 
 const Home = () => {
   const [stations, setStations] = useState([]);
@@ -34,7 +33,8 @@ const Home = () => {
   const [loading, setLoading] = useState(false); // For loading indicator
   const [nearbyLocations, setNearbyLocations] = useState([]);
   const [favoriteStations, setFavoriteStations] = useState([]);
-  const [center, setCenter] = useState(defaultCenter);
+  const [searchedLocation, setSearchedLocation] = useState(null); // State for the searched location
+  const autocompleteRef = useRef(null);
 
   const fetchStations = async (center) => {
     if (!center) return;
@@ -133,27 +133,6 @@ const Home = () => {
   }, [map, debouncedFetchStations, debouncedFetchCity]);
 
   useEffect(() => {
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setCenter({
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-        });
-      },
-      () => {
-        console.error("Error fetching user location");
-      }
-    );
-  }, []);
-
-  useEffect(() => {
-    if (map) {
-      fetchStations(center);
-      fetchCity(center.lat, center.lng);
-    }
-  }, [map, center]);
-
-  useEffect(() => {
     const fetchFavoriteStations = async () => {
       const user = auth.currentUser;
       if (!user) return;
@@ -216,30 +195,17 @@ const Home = () => {
     }
   };
 
-  const handleSearchChange = (event) => {
-    setSearchTerm(event.target.value);
-  };
-
-  const handleSearchSubmit = async (event) => {
-    event.preventDefault();
-    if (searchTerm) {
-      try {
-        const response = await axios.get(
-          "https://maps.googleapis.com/maps/api/geocode/json",
-          {
-            params: {
-              address: searchTerm,
-              key: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
-            },
-          }
-        );
-        const { lat, lng } = response.data.results[0].geometry.location;
-        map.panTo({ lat, lng });
-        map.setZoom(12); // Adjust the zoom level as needed
-        fetchStations({ lat, lng });
-        fetchCity(lat, lng);
-      } catch (error) {
-        console.error("Error fetching location:", error);
+  const handlePlaceChanged = () => {
+    if (autocompleteRef.current) {
+      const place = autocompleteRef.current.getPlace();
+      if (place.geometry) {
+        const { lat, lng } = place.geometry.location;
+        const location = { lat: lat(), lng: lng() };
+        setSearchedLocation(location); // Set the searched location
+        map.panTo(location);
+        map.setZoom(15); // Adjust the zoom level as needed
+        fetchStations(location);
+        fetchCity(lat(), lng());
       }
     }
   };
@@ -265,12 +231,31 @@ const Home = () => {
     setTimeout(() => setSelectedStation(null), 300);
   };
 
+  useEffect(() => {
+    // Fetch user's current location and set as map center
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setSearchedLocation({ lat: latitude, lng: longitude });
+          fetchStations({ lat: latitude, lng: longitude });
+          fetchCity(latitude, longitude);
+        },
+        (error) => {
+          console.error("Error fetching user location:", error);
+        }
+      );
+    } else {
+      console.error("Geolocation is not supported by this browser.");
+    }
+  }, []);
+
   return (
-    <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY}>
+    <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY} libraries={libraries}>
       <div style={containerStyle}>
         {/* Loading Indicator */}
         {loading && (
-          <div className="absolute top-0 left-0 w-full h-screen bg-transparent flex items-center justify-center z-50">
+          <div className="absolute top-0 left-0 w-full h-full bg-transparent flex items-center justify-center z-50">
             <div className="spinner-border text-primary" role="status">
               <span className="sr-only">Loading...</span>
             </div>
@@ -278,19 +263,24 @@ const Home = () => {
         )}
         {/* SearchBar */}
         <form
-          onSubmit={handleSearchSubmit}
+          onSubmit={(e) => e.preventDefault()}
           className="absolute top-20 left-1/2 transform -translate-x-1/2 w-[480px] bg-white rounded-full shadow-lg z-40 flex items-center opacity-95"
         >
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={handleSearchChange}
-            placeholder="Search for a location..."
-            className="w-full border-none outline-none rounded-full px-4 py-2"
-          />
+          <Autocomplete
+            onLoad={(ref) => (autocompleteRef.current = ref)}
+            onPlaceChanged={handlePlaceChanged}
+          >
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search for a location..."
+              className="w-full border-none outline-none rounded-full px-4 py-2"
+            />
+          </Autocomplete>
           <button
             type="submit"
-            className="px-4 py-2 bg-blue-400 h-[39px] text-black rounded-full ml-2 flex items-center justify-center"
+            className="px-4 py-2 bg-blue-400 h-[39px] text-black rounded-full ml-2 flex items-center justify-center absolute right-0"
           >
             <FaSearch />
           </button>
@@ -299,70 +289,79 @@ const Home = () => {
         <div className="absolute top-2 left-1/2 transform -translate-x-1/2 w-[480px] bg-white rounded-full shadow-lg z-40 flex items-center justify-center opacity-95 py-2">
           <p className="text-lg font-semibold">{city}</p>
         </div>
-        <GoogleMap
-          mapContainerStyle={{ width: "100%", height: "100%" }}
-          center={center}
-          zoom={10}
-          onLoad={(map) => setMap(map)}
-          onIdle={handleIdle}
-        >
-          {filteredStations.map((station) => {
-            const isFavorite = favoriteStations.some(
-              (fav) => fav.stationId === station.ID
-            );
-
-            return (
-              <Marker
-                key={station.ID}
-                position={{
-                  lat: station.AddressInfo.Latitude,
-                  lng: station.AddressInfo.Longitude,
-                }}
-                onClick={() => onSelect(station)}
-                icon={{
-                  url: isFavorite
-                    ? "https://img.icons8.com/?size=100&id=yUGu5KXHNq3O&format=png&color=FA5252" // Heart Icon
-                    : "https://img.icons8.com/?size=100&id=7880&format=png&color=FA5252", // Location Icon
-                  scaledSize: new window.google.maps.Size(32, 32),
-                }}
-              />
-            );
-          })}
-
-          {selectedStation && (
-            <InfoWindow
-              position={{
-                lat: selectedStation.AddressInfo.Latitude,
-                lng: selectedStation.AddressInfo.Longitude,
+        {searchedLocation && (
+          <GoogleMap
+            mapContainerStyle={{ width: "100%", height: "100%" }}
+            center={searchedLocation}
+            zoom={15} // Zoom in if there's a searched location
+            onLoad={(map) => setMap(map)}
+            onIdle={handleIdle}
+          >
+            <Marker
+              position={searchedLocation}
+              icon={{
+                url: "https://img.icons8.com/?size=100&id=43731&format=png&color=FA5252", // Location Icon
+                scaledSize: new window.google.maps.Size(32, 32),
               }}
-              onCloseClick={() => setSelectedStation(null)}
-            >
-              <div>
-                <img
-                  src="https://via.placeholder.com/100"
-                  alt="Station"
-                  className="w-full"
+            />
+            {filteredStations.map((station) => {
+              const isFavorite = favoriteStations.some(
+                (fav) => fav.stationId === station.ID
+              );
+
+              return (
+                <Marker
+                  key={station.ID}
+                  position={{
+                    lat: station.AddressInfo.Latitude,
+                    lng: station.AddressInfo.Longitude,
+                  }}
+                  onClick={() => onSelect(station)}
+                  icon={{
+                    url: isFavorite
+                      ? "https://img.icons8.com/?size=100&id=yUGu5KXHNq3O&format=png&color=FA5252" // Heart Icon
+                      : "https://img.icons8.com/?size=100&id=7880&format=png&color=FA5252", // Location Icon
+                    scaledSize: new window.google.maps.Size(32, 32),
+                  }}
                 />
-                <h2>{selectedStation.AddressInfo.Title}</h2>
-                <p>
-                  Connectors:{" "}
-                  {selectedStation.Connections.map(
-                    (conn) => conn.ConnectionType.Title
-                  ).join(", ")}
-                </p>
-                <button onClick={() => handleToggleFavorite(selectedStation)}>
-                  {favoriteStations.some(
-                    (fav) => fav.stationId === selectedStation.ID
-                  ) ? (
-                    <FaHeart size={20} className="text-red-500" />
-                  ) : (
-                    <FaRegHeart size={20} className="text-gray-500" />
-                  )}
-                </button>
-              </div>
-            </InfoWindow>
-          )}
-        </GoogleMap>
+              );
+            })}
+
+            {selectedStation && (
+              <InfoWindow
+                position={{
+                  lat: selectedStation.AddressInfo.Latitude,
+                  lng: selectedStation.AddressInfo.Longitude,
+                }}
+                onCloseClick={() => setSelectedStation(null)}
+              >
+                <div>
+                  <img
+                    src="https://via.placeholder.com/100"
+                    alt="Station"
+                    className="w-full"
+                  />
+                  <h2>{selectedStation.AddressInfo.Title}</h2>
+                  <p>
+                    Connectors:{" "}
+                    {selectedStation.Connections.map(
+                      (conn) => conn.ConnectionType.Title
+                    ).join(", ")}
+                  </p>
+                  <button onClick={() => handleToggleFavorite(selectedStation)}>
+                    {favoriteStations.some(
+                      (fav) => fav.stationId === selectedStation.ID
+                    ) ? (
+                      <FaHeart size={20} className="text-red-500" />
+                    ) : (
+                      <FaRegHeart size={20} className="text-gray-500" />
+                    )}
+                  </button>
+                </div>
+              </InfoWindow>
+            )}
+          </GoogleMap>
+        )}
       </div>
       <Drawer
         isOpen={drawerOpen}
