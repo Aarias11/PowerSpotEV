@@ -20,7 +20,6 @@ const containerStyle = {
   position: "relative",
 };
 
-// Define the libraries array outside the component
 const libraries = ['places'];
 
 const Home = () => {
@@ -133,6 +132,17 @@ const Home = () => {
   }, [map, debouncedFetchStations, debouncedFetchCity]);
 
   useEffect(() => {
+    if (map) {
+      const center = map.getCenter();
+      if (center) {
+        const centerCoords = { lat: center.lat(), lng: center.lng() };
+        fetchStations(centerCoords);
+        fetchCity(center.lat(), center.lng());
+      }
+    }
+  }, [map]);
+
+  useEffect(() => {
     const fetchFavoriteStations = async () => {
       const user = auth.currentUser;
       if (!user) return;
@@ -231,27 +241,38 @@ const Home = () => {
     setTimeout(() => setSelectedStation(null), 300);
   };
 
-  useEffect(() => {
-    // Fetch user's current location and set as map center
+  const getUserLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
-          setSearchedLocation({ lat: latitude, lng: longitude });
-          fetchStations({ lat: latitude, lng: longitude });
+          const location = { lat: latitude, lng: longitude };
+          setSearchedLocation(location);
+          fetchStations(location);
           fetchCity(latitude, longitude);
         },
         (error) => {
-          console.error("Error fetching user location:", error);
+          console.error("Error getting user location:", error);
+          // Handle location error (e.g., default location, show message)
         }
       );
     } else {
       console.error("Geolocation is not supported by this browser.");
+      // Handle browser not supporting geolocation
     }
+  };
+
+  useEffect(() => {
+    getUserLocation();
   }, []);
 
   return (
-    <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY} libraries={libraries}>
+    <LoadScript
+      googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY}
+      libraries={libraries}
+      onLoad={() => console.log("Google Maps API loaded successfully")}
+      onError={(error) => console.error("Error loading Google Maps API:", error)}
+    >
       <div style={containerStyle}>
         {/* Loading Indicator */}
         {loading && (
@@ -289,14 +310,14 @@ const Home = () => {
         <div className="absolute top-2 left-1/2 transform -translate-x-1/2 w-[480px] bg-white rounded-full shadow-lg z-40 flex items-center justify-center opacity-95 py-2">
           <p className="text-lg font-semibold">{city}</p>
         </div>
-        {searchedLocation && (
-          <GoogleMap
-            mapContainerStyle={{ width: "100%", height: "100%" }}
-            center={searchedLocation}
-            zoom={15} // Zoom in if there's a searched location
-            onLoad={(map) => setMap(map)}
-            onIdle={handleIdle}
-          >
+        <GoogleMap
+          mapContainerStyle={{ width: "100%", height: "100%" }}
+          center={searchedLocation} // Removed defaultCenter
+          zoom={searchedLocation ? 15 : 10} // Zoom in if there's a searched location
+          onLoad={(map) => setMap(map)}
+          onIdle={handleIdle}
+        >
+          {searchedLocation && (
             <Marker
               position={searchedLocation}
               icon={{
@@ -304,64 +325,64 @@ const Home = () => {
                 scaledSize: new window.google.maps.Size(32, 32),
               }}
             />
-            {filteredStations.map((station) => {
-              const isFavorite = favoriteStations.some(
-                (fav) => fav.stationId === station.ID
-              );
+          )}
+          {filteredStations.map((station) => {
+            const isFavorite = favoriteStations.some(
+              (fav) => fav.stationId === station.ID
+            );
 
-              return (
-                <Marker
-                  key={station.ID}
-                  position={{
-                    lat: station.AddressInfo.Latitude,
-                    lng: station.AddressInfo.Longitude,
-                  }}
-                  onClick={() => onSelect(station)}
-                  icon={{
-                    url: isFavorite
-                      ? "https://img.icons8.com/?size=100&id=yUGu5KXHNq3O&format=png&color=FA5252" // Heart Icon
-                      : "https://img.icons8.com/?size=100&id=7880&format=png&color=FA5252", // Location Icon
-                    scaledSize: new window.google.maps.Size(32, 32),
-                  }}
-                />
-              );
-            })}
-
-            {selectedStation && (
-              <InfoWindow
+            return (
+              <Marker
+                key={station.ID}
                 position={{
-                  lat: selectedStation.AddressInfo.Latitude,
-                  lng: selectedStation.AddressInfo.Longitude,
+                  lat: station.AddressInfo.Latitude,
+                  lng: station.AddressInfo.Longitude,
                 }}
-                onCloseClick={() => setSelectedStation(null)}
-              >
-                <div>
-                  <img
-                    src="https://via.placeholder.com/100"
-                    alt="Station"
-                    className="w-full"
-                  />
-                  <h2>{selectedStation.AddressInfo.Title}</h2>
-                  <p>
-                    Connectors:{" "}
-                    {selectedStation.Connections.map(
-                      (conn) => conn.ConnectionType.Title
-                    ).join(", ")}
-                  </p>
-                  <button onClick={() => handleToggleFavorite(selectedStation)}>
-                    {favoriteStations.some(
-                      (fav) => fav.stationId === selectedStation.ID
-                    ) ? (
-                      <FaHeart size={20} className="text-red-500" />
-                    ) : (
-                      <FaRegHeart size={20} className="text-gray-500" />
-                    )}
-                  </button>
-                </div>
-              </InfoWindow>
-            )}
-          </GoogleMap>
-        )}
+                onClick={() => onSelect(station)}
+                icon={{
+                  url: isFavorite
+                    ? "https://img.icons8.com/?size=100&id=yUGu5KXHNq3O&format=png&color=FA5252" // Heart Icon
+                    : "https://img.icons8.com/?size=100&id=7880&format=png&color=FA5252", // Location Icon
+                  scaledSize: new window.google.maps.Size(32, 32),
+                }}
+              />
+            );
+          })}
+
+          {selectedStation && (
+            <InfoWindow
+              position={{
+                lat: selectedStation.AddressInfo.Latitude,
+                lng: selectedStation.AddressInfo.Longitude,
+              }}
+              onCloseClick={() => setSelectedStation(null)}
+            >
+              <div>
+                <img
+                  src="https://via.placeholder.com/100"
+                  alt="Station"
+                  className="w-full"
+                />
+                <h2>{selectedStation.AddressInfo.Title}</h2>
+                <p>
+                  Connectors:{" "}
+                  {selectedStation.Connections.map(
+                    (conn) => conn.ConnectionType.Title
+                  ).join(", ")}
+                </p>
+                <button onClick={() => handleToggleFavorite(selectedStation)}>
+                  {favoriteStations.some(
+                    (fav) => fav.stationId === selectedStation.ID
+                  ) ? (
+                    <FaHeart size={20} className="text-red-500" />
+                  ) : (
+                    <FaRegHeart size={20} className="text-gray-500" />
+                  )}
+                </button>
+              </div>
+            </InfoWindow>
+          )}
+        </GoogleMap>
       </div>
       <Drawer
         isOpen={drawerOpen}

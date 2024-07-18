@@ -34,17 +34,17 @@ const Sidebar = () => {
   }, [currentUser]);
 
   return (
-    <aside className="w-[300px] h-full bg-zinc-900 text-white p-4 flex flex-col pt-24">
+    <aside className="w-[80px] sm:w-[300px] h-full bg-zinc-900 text-white p-4 flex flex-col pt-24 transition-all duration-300">
       {/* User Info */}
-      <div className="flex flex-col items-center mb-6">
+      <div className="sm:flex sm:flex-col sm:items-center mb-6 ml-1">
         <img
-          className="w-[110px] h-[110px] border rounded-full mb-4 object-cover"
+          className="w-[40px] h-[40px] sm:w-[110px] sm:h-[110px] rounded-full mb-4 object-cover"
           src={profilePicURL || 'https://via.placeholder.com/110'}
           alt="User Profile"
         />
-        <h2 className="text-xl font-bold">{currentUser.displayName || 'Username'}</h2>
-        <p className="text-slate-300/90">{email || currentUser.email}</p>
-        <p className="text-slate-300/90 px-6 text-center">{bio || currentUser.bio}</p>
+        <h2 className="hidden sm:flex sm:text-xl sm:font-bold">{currentUser.displayName || 'Username'}</h2>
+        <p className="hidden sm:flex text-slate-300/90">{email || currentUser.email}</p>
+        <p className="hidden sm:flex text-slate-300/90 px-6 text-center">{bio || currentUser.bio}</p>
       </div>
       {/* Navigation */}
       <nav className="flex-1">
@@ -52,31 +52,31 @@ const Sidebar = () => {
           <li>
             <Link to="/dashboard" className="flex items-center gap-3 px-4 py-2 rounded hover:bg-gray-700 transition">
               <FaHome />
-              <span>Dashboard</span>
+              <span className='hidden sm:flex'>Dashboard</span>
             </Link>
           </li>
           <li>
             <Link to="/sessions" className="flex items-center gap-3 px-4 py-2 rounded hover:bg-gray-700 transition">
               <FaChargingStation />
-              <span>Charging Sessions</span>
+              <span className='hidden sm:flex'>Charging Sessions</span>
             </Link>
           </li>
           <li>
             <Link to="/favorites" className="flex items-center gap-3 px-4 py-2 rounded hover:bg-gray-700 transition">
               <FaHeart />
-              <span>Favorite Stations</span>
+              <span className='hidden sm:flex'>Favorite Stations</span>
             </Link>
           </li>
           <li>
             <Link to="/settings" className="flex items-center gap-3 px-4 py-2 rounded hover:bg-gray-700 transition">
               <FaCog />
-              <span>Settings</span>
+              <span className='hidden sm:flex'>Settings</span>
             </Link>
           </li>
           <li>
             <Link to="/support" className="flex items-center gap-3 px-4 py-2 rounded hover:bg-gray-700 transition">
               <FaQuestionCircle />
-              <span>Support</span>
+              <span className='hidden sm:flex'>Support</span>
             </Link>
           </li>
         </ul>
