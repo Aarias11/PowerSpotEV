@@ -41,7 +41,7 @@ const Signup = ({ isOpen, onClose }) => {
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
-      {/* {error && <p className="text-red-500 mb-4">{error}</p>} */}
+      {error && <p className="text-red-500 mb-4">{error}</p>}
       <div className="flex">
         <div className="w-[50%] h-[490px]">
           <img className="w-full h-full opacity-80" src={signuppicture} alt="Signup" />
@@ -51,7 +51,7 @@ const Signup = ({ isOpen, onClose }) => {
             <h2 className="text-xl font-bold mb-4 text-white text-center">Signup</h2>
             {/* Signup Form */}
             <form onSubmit={handleSignup} className="space-y-4">
-                {/* Username */}
+              {/* Username */}
               <div className="mb-4 relative">
                 <label className="block text-white ml-4 text-[12px]">Username</label>
                 <input
@@ -75,7 +75,7 @@ const Signup = ({ isOpen, onClose }) => {
                   className="w-full h-[40px] pl-5 pt-1.5 border rounded-full bg-[#02151F] text-white text-[12px] focus:outline-none focus:border-blue-500"
                   required
                 />
-                <FaEnvelope className="absolute top-7 mt-0.5 right-5  text-white" />
+                <FaEnvelope className="absolute top-7 mt-0.5 right-5 text-white" />
               </div>
               {/* Password */}
               <div className="mb-4 relative">
@@ -88,7 +88,7 @@ const Signup = ({ isOpen, onClose }) => {
                   className="w-full h-[40px] pl-5 pt-1.5 border rounded-full bg-[#02151F] text-white text-[12px] focus:outline-none focus:border-blue-500"
                   required
                 />
-                <div className="absolute top-7 right-5 mt-0.5  text-white cursor-pointer" onClick={togglePasswordVisibility}>
+                <div className="absolute top-7 right-5 mt-0.5 text-white cursor-pointer" onClick={togglePasswordVisibility}>
                   {showPassword ? <FaEyeSlash /> : <FaEye />}
                 </div>
               </div>
