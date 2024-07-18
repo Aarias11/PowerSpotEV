@@ -13,6 +13,8 @@ import { IoCheckmarkCircle } from "react-icons/io5";
 const Dashboard = () => {
   const [userInfo, setUserInfo] = useState({});
   const [favoriteStations, setFavoriteStations] = useState([]);
+  const [userComments, setUserComments] = useState([]);
+  const [userPhotos, setUserPhotos] = useState([]);
   const [lastSignInTime, setLastSignInTime] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const scrollContainerRef = useRef(null);
@@ -34,6 +36,8 @@ const Dashboard = () => {
           setUserInfo(data);
           setLastSignInTime(user.metadata.lastSignInTime);
           fetchFavoriteStations(user.uid);
+          fetchUserComments(user.uid);
+          fetchUserPhotos(user.uid);
         }
       }
     };
@@ -48,6 +52,46 @@ const Dashboard = () => {
         setFavoriteStations(favoriteStationsData);
       } catch (error) {
         console.error("Error fetching favorite stations: ", error);
+      }
+    };
+
+    const fetchUserComments = async (userId) => {
+      try {
+        const stationsCollectionRef = collection(db, 'stations');
+        const stationsSnapshot = await getDocs(stationsCollectionRef);
+
+        const userCommentsData = [];
+        stationsSnapshot.forEach(doc => {
+          const data = doc.data();
+          if (data.comments) {
+            const userCommentsInStation = data.comments.filter(comment => comment.userId === userId);
+            userCommentsData.push(...userCommentsInStation);
+          }
+        });
+
+        setUserComments(userCommentsData);
+      } catch (error) {
+        console.error("Error fetching user comments: ", error);
+      }
+    };
+
+    const fetchUserPhotos = async (userId) => {
+      try {
+        const stationsCollectionRef = collection(db, 'stations');
+        const stationsSnapshot = await getDocs(stationsCollectionRef);
+
+        const userPhotosData = [];
+        stationsSnapshot.forEach(doc => {
+          const data = doc.data();
+          if (data.photos) {
+            const userPhotosInStation = data.photos.filter(photo => photo.userId === userId);
+            userPhotosData.push(...userPhotosInStation);
+          }
+        });
+
+        setUserPhotos(userPhotosData);
+      } catch (error) {
+        console.error("Error fetching user photos: ", error);
       }
     };
 
@@ -103,6 +147,9 @@ const Dashboard = () => {
             <p className="mt-2 text-slate-300/90">Last login time: {lastSignInTime}</p>
             <p className="mt-2 text-slate-300/90">You have {userInfo.chargingSessions || 0} charging sessions this month.</p>
           </section>
+          {/* --------------------------------------------*/}
+          {/* Profile Info */}
+          {/* --------------------------------------------*/}
           <section className="mb-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="bg-zinc-900/90 p-6 rounded-lg shadow-lg">
               <h2 className="text-lg md:text-xl font-bold text-slate-300">Profile Info</h2>
@@ -113,6 +160,11 @@ const Dashboard = () => {
                 <button className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-lg">Edit Profile</button>
               </Link>
             </div>
+
+          {/* --------------------------------------------*/}
+          {/* Favorite Stations Section */}
+          {/* --------------------------------------------*/}
+            
             <div className="bg-zinc-900/90 p-6 rounded-lg shadow-lg">
               <h2 className="text-lg md:text-xl font-bold text-slate-300">Favorite Stations</h2>
               {favoriteStations.length > 0 ? (
@@ -145,12 +197,57 @@ const Dashboard = () => {
               )}
             </div>
           </section>
-          <section className="mb-6">
+          {/* --------------------------------------------*/}
+          {/* My Comments Section */}
+          {/* --------------------------------------------*/}
+
+          <section className="mb-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="w-full bg-zinc-900/90 p-6 rounded-lg shadow-lg">
+              <h2 className="text-lg md:text-xl font-bold text-slate-300">My Comments</h2>
+              {userComments.length > 0 ? (
+                <div className="space-y-4">
+                  {userComments.map((comment, index) => (
+                    <div key={index} className="p-4 bg-zinc-800 rounded-lg shadow-lg">
+                      <div className="flex items-center mb-2">
+                        <img src={comment.profilePicture} alt="Profile" className="w-10 h-10 rounded-full mr-3" />
+                        <div>
+                          <p className="font-bold">{comment.userName}</p>
+                          
+                          <p className="text-xs text-slate-300/90">{new Date(comment.timestamp).toLocaleString()}</p>
+                        </div>
+                      </div>
+                      <p>{comment.userCar}</p>
+                      <p className="text-slate-300/90 mt-2">{comment.text}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-slate-300/90">No comments found.</p>
+              )}
+            </div>
+          {/* --------------------------------------------*/}
+          {/* My Photos Section */}
+          {/* --------------------------------------------*/}
+
             <div className="bg-zinc-900/90 p-6 rounded-lg shadow-lg">
-              <h2 className="text-lg md:text-xl font-bold text-slate-300">Settings</h2>
-              {/* Settings options */}
+              <h2 className="text-lg md:text-xl font-bold text-slate-300">My Photos</h2>
+              {userPhotos.length > 0 ? (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {userPhotos.map((photo, index) => (
+                    <div key={index} className="relative">
+                      <img src={photo.url} alt={`User Photo ${index}`} className="w-full h-32 object-cover rounded-lg" />
+                      <p className="absolute bottom-2 left-2 text-xs text-slate-300/90 bg-black/50 px-2 py-1 rounded">{new Date(photo.timestamp).toLocaleString()}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-slate-300/90">No photos found.</p>
+              )}
             </div>
           </section>
+          {/* --------------------------------------------*/}
+          {/* Support Section */}
+          {/* --------------------------------------------*/}
           <section className="mb-6">
             <div className="bg-zinc-900/90 p-6 rounded-lg shadow-lg">
               <h2 className="text-lg md:text-xl font-bold text-slate-300">Support</h2>

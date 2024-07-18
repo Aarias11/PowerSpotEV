@@ -13,6 +13,8 @@ import { FaSearch, FaRegHeart, FaHeart } from "react-icons/fa";
 import { IoLocation } from "react-icons/io5";
 import { auth, db } from '../../firebase';
 import { collection, doc, getDocs, query, where, setDoc, deleteDoc, getDoc } from 'firebase/firestore';
+import LoadingBar from 'react-top-loading-bar';
+import { useLocation } from 'react-router-dom';
 
 const containerStyle = {
   width: "100%",
@@ -20,6 +22,7 @@ const containerStyle = {
   position: "relative",
 };
 
+// Define the libraries array outside the component
 const libraries = ['places'];
 
 const Home = () => {
@@ -33,12 +36,20 @@ const Home = () => {
   const [nearbyLocations, setNearbyLocations] = useState([]);
   const [favoriteStations, setFavoriteStations] = useState([]);
   const [searchedLocation, setSearchedLocation] = useState(null); // State for the searched location
+  const [mapLoading, setMapLoading] = useState(true); // New state for map loading
   const autocompleteRef = useRef(null);
+  const loadingBarRef = useRef(null);
+  const location = useLocation();
+
+  useEffect(() => {
+    loadingBarRef.current.continuousStart();
+  }, [location]);
 
   const fetchStations = async (center) => {
     if (!center) return;
     console.log("Fetching stations with center:", center);
     setLoading(true); // Set loading to true when fetching starts
+    loadingBarRef.current.continuousStart(); // Start the loading bar
     try {
       const response = await axios.get("https://api.openchargemap.io/v3/poi/", {
         params: {
@@ -62,6 +73,7 @@ const Home = () => {
       setStations([]);
     } finally {
       setLoading(false); // Set loading to false when fetching completes
+      loadingBarRef.current.complete(); // Complete the loading bar
     }
   };
 
@@ -216,6 +228,7 @@ const Home = () => {
         map.setZoom(15); // Adjust the zoom level as needed
         fetchStations(location);
         fetchCity(lat(), lng());
+        setSearchTerm(""); // Reset the search term after place is selected
       }
     }
   };
@@ -267,130 +280,137 @@ const Home = () => {
   }, []);
 
   return (
-    <LoadScript
-      googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY}
-      libraries={libraries}
-      onLoad={() => console.log("Google Maps API loaded successfully")}
-      onError={(error) => console.error("Error loading Google Maps API:", error)}
-    >
-      <div style={containerStyle}>
-        {/* Loading Indicator */}
-        {loading && (
-          <div className="absolute top-0 left-0 w-full h-full bg-transparent flex items-center justify-center z-50">
-            <div className="spinner-border text-primary" role="status">
-              <span className="sr-only">Loading...</span>
+    <>
+      <LoadingBar color="#f11946" ref={loadingBarRef} />
+      <LoadScript
+        googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY}
+        libraries={libraries}
+        onLoad={() => console.log("Google Maps API loaded successfully")}
+        onError={(error) => console.error("Error loading Google Maps API:", error)}
+      >
+        <div style={containerStyle}>
+          {/* Loading Indicator */}
+          {loading && (
+            <div className="absolute top-0 left-0 w-full h-full bg-transparent flex items-center justify-center z-50">
+              <div className="spinner-border text-primary" role="status">
+                <span className="sr-only">Loading...</span>
+              </div>
             </div>
-          </div>
-        )}
-        {/* SearchBar */}
-        <form
-          onSubmit={(e) => e.preventDefault()}
-          className="absolute top-20 left-1/2 transform -translate-x-1/2 w-[480px] bg-white rounded-full shadow-lg z-40 flex items-center opacity-95"
-        >
-          <Autocomplete
-            onLoad={(ref) => (autocompleteRef.current = ref)}
-            onPlaceChanged={handlePlaceChanged}
-          >
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search for a location..."
-              className="w-full border-none outline-none rounded-full px-4 py-2"
-            />
-          </Autocomplete>
-          <button
-            type="submit"
-            className="px-4 py-2 bg-blue-400 h-[39px] text-black rounded-full ml-2 flex items-center justify-center absolute right-0"
-          >
-            <FaSearch />
-          </button>
-        </form>
-        {/* City Display */}
-        <div className="absolute top-2 left-1/2 transform -translate-x-1/2 w-[480px] bg-white rounded-full shadow-lg z-40 flex items-center justify-center opacity-95 py-2">
-          <p className="text-lg font-semibold">{city}</p>
-        </div>
-        <GoogleMap
-          mapContainerStyle={{ width: "100%", height: "100%" }}
-          center={searchedLocation} // Removed defaultCenter
-          zoom={searchedLocation ? 15 : 10} // Zoom in if there's a searched location
-          onLoad={(map) => setMap(map)}
-          onIdle={handleIdle}
-        >
-          {searchedLocation && (
-            <Marker
-              position={searchedLocation}
-              icon={{
-                url: "https://img.icons8.com/?size=100&id=43731&format=png&color=FA5252", // Location Icon
-                scaledSize: new window.google.maps.Size(32, 32),
-              }}
-            />
           )}
-          {filteredStations.map((station) => {
-            const isFavorite = favoriteStations.some(
-              (fav) => fav.stationId === station.ID
-            );
-
-            return (
+          {/* SearchBar */}
+          <form
+            onSubmit={(e) => e.preventDefault()}
+            className="absolute top-20 left-1/2 transform -translate-x-1/2 w-[480px] bg-white rounded-full shadow-lg z-40 flex items-center opacity-95"
+          >
+            <Autocomplete
+              onLoad={(ref) => (autocompleteRef.current = ref)}
+              onPlaceChanged={handlePlaceChanged}
+            >
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search for a location..."
+                className="w-full border-none outline-none rounded-full px-4 py-2"
+              />
+            </Autocomplete>
+            <button
+              type="submit"
+              className="px-4 py-2 bg-blue-400 h-[39px] text-black rounded-full ml-2 flex items-center justify-center absolute right-0"
+            >
+              <FaSearch />
+            </button>
+          </form>
+          {/* City Display */}
+          <div className="absolute top-2 left-1/2 transform -translate-x-1/2 w-[480px] bg-white rounded-full shadow-lg z-40 flex items-center justify-center opacity-95 py-2">
+            <p className="text-lg font-semibold">{city}</p>
+          </div>
+          <GoogleMap
+            mapContainerStyle={{ width: "100%", height: "100%" }}
+            center={searchedLocation} // Removed defaultCenter
+            zoom={searchedLocation ? 15 : 10} // Zoom in if there's a searched location
+            onLoad={(map) => {
+              setMap(map);
+              setMapLoading(false); // Set mapLoading to false once map is loaded
+              loadingBarRef.current.complete(); // Complete the loading bar
+            }}
+            onIdle={handleIdle}
+          >
+            {searchedLocation && (
               <Marker
-                key={station.ID}
-                position={{
-                  lat: station.AddressInfo.Latitude,
-                  lng: station.AddressInfo.Longitude,
-                }}
-                onClick={() => onSelect(station)}
+                position={searchedLocation}
                 icon={{
-                  url: isFavorite
-                    ? "https://img.icons8.com/?size=100&id=yUGu5KXHNq3O&format=png&color=FA5252" // Heart Icon
-                    : "https://img.icons8.com/?size=100&id=7880&format=png&color=FA5252", // Location Icon
+                  url: "https://img.icons8.com/?size=100&id=43731&format=png&color=FA5252", // Location Icon
                   scaledSize: new window.google.maps.Size(32, 32),
                 }}
               />
-            );
-          })}
+            )}
+            {filteredStations.map((station) => {
+              const isFavorite = favoriteStations.some(
+                (fav) => fav.stationId === station.ID
+              );
 
-          {selectedStation && (
-            <InfoWindow
-              position={{
-                lat: selectedStation.AddressInfo.Latitude,
-                lng: selectedStation.AddressInfo.Longitude,
-              }}
-              onCloseClick={() => setSelectedStation(null)}
-            >
-              <div>
-                <img
-                  src="https://via.placeholder.com/100"
-                  alt="Station"
-                  className="w-full"
+              return (
+                <Marker
+                  key={station.ID}
+                  position={{
+                    lat: station.AddressInfo.Latitude,
+                    lng: station.AddressInfo.Longitude,
+                  }}
+                  onClick={() => onSelect(station)}
+                  icon={{
+                    url: isFavorite
+                      ? "https://img.icons8.com/?size=100&id=yUGu5KXHNq3O&format=png&color=FA5252" // Heart Icon
+                      : "https://img.icons8.com/?size=100&id=7880&format=png&color=FA5252", // Location Icon
+                    scaledSize: new window.google.maps.Size(32, 32),
+                  }}
                 />
-                <h2>{selectedStation.AddressInfo.Title}</h2>
-                <p>
-                  Connectors:{" "}
-                  {selectedStation.Connections.map(
-                    (conn) => conn.ConnectionType.Title
-                  ).join(", ")}
-                </p>
-                <button onClick={() => handleToggleFavorite(selectedStation)}>
-                  {favoriteStations.some(
-                    (fav) => fav.stationId === selectedStation.ID
-                  ) ? (
-                    <FaHeart size={20} className="text-red-500" />
-                  ) : (
-                    <FaRegHeart size={20} className="text-gray-500" />
-                  )}
-                </button>
-              </div>
-            </InfoWindow>
-          )}
-        </GoogleMap>
-      </div>
-      <Drawer
-        isOpen={drawerOpen}
-        onClose={closeDrawer}
-        selectedStation={selectedStation}
-        nearbyLocations={nearbyLocations}
-      />
-    </LoadScript>
+              );
+            })}
+
+            {selectedStation && (
+              <InfoWindow
+                position={{
+                  lat: selectedStation.AddressInfo.Latitude,
+                  lng: selectedStation.AddressInfo.Longitude,
+                }}
+                onCloseClick={() => setSelectedStation(null)}
+              >
+                <div>
+                  <img
+                    src="https://via.placeholder.com/100"
+                    alt="Station"
+                    className="w-full"
+                  />
+                  <h2>{selectedStation.AddressInfo.Title}</h2>
+                  <p>
+                    Connectors:{" "}
+                    {selectedStation.Connections.map(
+                      (conn) => conn.ConnectionType.Title
+                    ).join(", ")}
+                  </p>
+                  <button onClick={() => handleToggleFavorite(selectedStation)}>
+                    {favoriteStations.some(
+                      (fav) => fav.stationId === selectedStation.ID
+                    ) ? (
+                      <FaHeart size={20} className="text-red-500" />
+                    ) : (
+                      <FaRegHeart size={20} className="text-gray-500" />
+                    )}
+                  </button>
+                </div>
+              </InfoWindow>
+            )}
+          </GoogleMap>
+        </div>
+        <Drawer
+          isOpen={drawerOpen}
+          onClose={closeDrawer}
+          selectedStation={selectedStation}
+          nearbyLocations={nearbyLocations}
+        />
+      </LoadScript>
+    </>
   );
 };
 

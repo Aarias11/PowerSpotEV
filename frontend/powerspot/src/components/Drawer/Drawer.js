@@ -101,9 +101,16 @@ const Drawer = ({ isOpen, onClose, selectedStation, nearbyLocations }) => {
         },
         async () => {
           const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-          setPhotos((prevPhotos) => [...prevPhotos, downloadURL]);
+          const photoData = {
+            url: downloadURL,
+            userId: user.uid,
+            userName: user.displayName || "Anonymous",
+            profilePicture: user.photoURL || "https://via.placeholder.com/150",
+            timestamp: new Date().toISOString(),
+          };
+          setPhotos((prevPhotos) => [...prevPhotos, photoData]);
           await updateDoc(doc(db, 'stations', `${selectedStation.ID}`), {
-            photos: arrayUnion(downloadURL)
+            photos: arrayUnion(photoData)
           });
         }
       );
@@ -136,6 +143,7 @@ const Drawer = ({ isOpen, onClose, selectedStation, nearbyLocations }) => {
         text: newComment,
         userCar: userCar,
         timestamp: new Date().toISOString(),
+        userId: user.uid,
       };
 
       const docRef = doc(db, 'stations', `${selectedStation.ID}`);
@@ -324,7 +332,7 @@ const Drawer = ({ isOpen, onClose, selectedStation, nearbyLocations }) => {
                 className=' w-[120px] h-[120px] flex-shrink-0 cursor-pointer'
                 onClick={() => handlePhotoClick(index)}
               >
-                <img src={photo} alt={`Station Media ${index}`} className='w-full h-full object-cover rounded-xl' />
+                <img src={photo.url} alt={`Station Media ${index}`} className='w-full h-full object-cover rounded-xl' />
               </div>
             ))}
           </div>
@@ -366,7 +374,7 @@ const Drawer = ({ isOpen, onClose, selectedStation, nearbyLocations }) => {
           >
             &lt;
           </button>
-          <img src={photos[selectedPhotoIndex]} alt="Selected" className="w-[750px] h-auto rounded-lg max-w-full max-h-full" />
+          <img src={photos[selectedPhotoIndex]?.url} alt="Selected" className="w-[750px] h-auto rounded-lg max-w-full max-h-full" />
           <button
             onClick={handleNextPhoto}
             className="absolute w-10 h-10 right-0 top-1/2 transform -translate-y-1/2 bg-blue-500/50 hover:bg-blue-700/80 text-white rounded-full p-2"
