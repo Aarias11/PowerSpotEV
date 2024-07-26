@@ -10,7 +10,7 @@ function Loading() {
         <h2 className='text-slate-300 text-4xl font-semibold'>PowerSpot EV</h2>
         </div>
         <LottieLoadingAnimation />
-        <h3 className='text-slate-300 mt-4'>Loading...</h3>
+        <h3 className='text-slate-300 text-[24px] mt-4'>Loading...</h3>
     </div>
   )
 }
