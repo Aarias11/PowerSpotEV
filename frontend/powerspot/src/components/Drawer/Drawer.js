@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { IoLocationOutline } from "react-icons/io5";
-import { FaRegHeart, FaHeart, FaPlug, FaPhone, FaMapMarkerAlt, FaDollarSign } from "react-icons/fa";
+import { FaRegHeart, FaHeart, FaPlug, FaPhone, FaMapMarkerAlt, FaDollarSign, FaChargingStation } from "react-icons/fa";
+import { Ri24HoursFill } from "react-icons/ri";
 import { MdAddPhotoAlternate, MdMessage, MdDirections } from "react-icons/md";
 import { Link } from 'react-router-dom';
 import { doc, getDoc, setDoc, updateDoc, arrayUnion } from 'firebase/firestore';
@@ -295,7 +296,8 @@ const Drawer = ({ isOpen, onClose, selectedStation, nearbyLocations }) => {
           </div>
           {/* Charging Stations */}
           <div className='flex gap-4 items-center p-2'>
-            <FaPlug className='w-5 h-5 text-slate-300/90' />
+            <FaChargingStation
+            className='w-5 h-5 text-slate-300/90 translate-x-1' />
             <span className='font-light text-[14px] translate-y-[3px] text-slate-300/90'>Charging Stations: {selectedStation?.Connections?.length || "N/A"}</span>
           </div>
         </div>

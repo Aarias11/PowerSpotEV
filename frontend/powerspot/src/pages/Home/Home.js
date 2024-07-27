@@ -302,7 +302,7 @@ const Home = () => {
             onSubmit={(e) => e.preventDefault()}
             className="absolute top-20 left-1/2 transform -translate-x-1/2 w-[480px] bg-white rounded-full shadow-lg z-40 flex items-center opacity-95"
           >
-            <Autocomplete
+            <Autocomplete className="w-full"
               onLoad={(ref) => (autocompleteRef.current = ref)}
               onPlaceChanged={handlePlaceChanged}
             >
@@ -316,15 +316,12 @@ const Home = () => {
             </Autocomplete>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-400 h-[39px] text-black rounded-full ml-2 flex items-center justify-center absolute right-0"
+              className="px-4 py-2 bg-blue-400 h-[40px] text-black rounded-xl ml-2 flex items-center justify-center absolute right-0"
             >
               <FaSearch />
             </button>
           </form>
-          {/* City Display */}
-          <div className="absolute top-2 left-1/2 transform -translate-x-1/2 w-[480px] bg-white rounded-full shadow-lg z-40 flex items-center justify-center opacity-95 py-2">
-            <p className="text-lg font-semibold">{city}</p>
-          </div>
+          
           <GoogleMap
             mapContainerStyle={{ width: "100%", height: "100%" }}
             center={searchedLocation} // Removed defaultCenter
@@ -361,7 +358,7 @@ const Home = () => {
                   icon={{
                     url: isFavorite
                       ? "https://img.icons8.com/?size=100&id=yUGu5KXHNq3O&format=png&color=FA5252" // Heart Icon
-                      : "https://img.icons8.com/?size=100&id=7880&format=png&color=FA5252", // Location Icon
+                      : "https://img.icons8.com/?size=100&id=NLPilHTzLqby&format=png&color=FA5252", // Location Icon
                     scaledSize: new window.google.maps.Size(32, 32),
                   }}
                 />
