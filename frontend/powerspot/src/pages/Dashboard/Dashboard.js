@@ -1,10 +1,19 @@
-import React, { useEffect, useState, useRef } from 'react';
-import Sidebar from '../../components/Sidebar/Sidebar';
-import { auth, db } from '../../firebase';
-import { doc, getDoc, collection, getDocs, query, where, deleteDoc, setDoc } from 'firebase/firestore';
-import { FaHeart, FaRegHeart } from 'react-icons/fa';
-import Loading from '../Loading/Loading';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useState, useRef } from "react";
+import Sidebar from "../../components/Sidebar/Sidebar";
+import { auth, db } from "../../firebase";
+import {
+  doc,
+  getDoc,
+  collection,
+  getDocs,
+  query,
+  where,
+  deleteDoc,
+  setDoc,
+} from "firebase/firestore";
+import { FaHeart, FaRegHeart } from "react-icons/fa";
+import Loading from "../Loading/Loading";
+import { Link } from "react-router-dom";
 import { CiLocationArrow1 } from "react-icons/ci";
 import { RiChargingPile2Line } from "react-icons/ri";
 import { GrStatusInfo } from "react-icons/gr";
@@ -15,7 +24,7 @@ const Dashboard = () => {
   const [favoriteStations, setFavoriteStations] = useState([]);
   const [userComments, setUserComments] = useState([]);
   const [userPhotos, setUserPhotos] = useState([]);
-  const [lastSignInTime, setLastSignInTime] = useState('');
+  const [lastSignInTime, setLastSignInTime] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const scrollContainerRef = useRef(null);
 
@@ -29,7 +38,7 @@ const Dashboard = () => {
     const fetchUserInfo = async () => {
       const user = auth.currentUser;
       if (user) {
-        const userDocRef = doc(db, 'users', user.uid);
+        const userDocRef = doc(db, "users", user.uid);
         const userDocSnap = await getDoc(userDocRef);
         if (userDocSnap.exists()) {
           const data = userDocSnap.data();
@@ -44,11 +53,13 @@ const Dashboard = () => {
 
     const fetchFavoriteStations = async (userId) => {
       try {
-        const favoritesCollectionRef = collection(db, 'favorites');
+        const favoritesCollectionRef = collection(db, "favorites");
         const q = query(favoritesCollectionRef, where("userId", "==", userId));
         const favoriteStationsSnapshot = await getDocs(q);
 
-        const favoriteStationsData = favoriteStationsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const favoriteStationsData = favoriteStationsSnapshot.docs.map(
+          (doc) => ({ id: doc.id, ...doc.data() })
+        );
         setFavoriteStations(favoriteStationsData);
       } catch (error) {
         console.error("Error fetching favorite stations: ", error);
@@ -57,14 +68,16 @@ const Dashboard = () => {
 
     const fetchUserComments = async (userId) => {
       try {
-        const stationsCollectionRef = collection(db, 'stations');
+        const stationsCollectionRef = collection(db, "stations");
         const stationsSnapshot = await getDocs(stationsCollectionRef);
 
         const userCommentsData = [];
-        stationsSnapshot.forEach(doc => {
+        stationsSnapshot.forEach((doc) => {
           const data = doc.data();
           if (data.comments) {
-            const userCommentsInStation = data.comments.filter(comment => comment.userId === userId);
+            const userCommentsInStation = data.comments.filter(
+              (comment) => comment.userId === userId
+            );
             userCommentsData.push(...userCommentsInStation);
           }
         });
@@ -77,14 +90,16 @@ const Dashboard = () => {
 
     const fetchUserPhotos = async (userId) => {
       try {
-        const stationsCollectionRef = collection(db, 'stations');
+        const stationsCollectionRef = collection(db, "stations");
         const stationsSnapshot = await getDocs(stationsCollectionRef);
 
         const userPhotosData = [];
-        stationsSnapshot.forEach(doc => {
+        stationsSnapshot.forEach((doc) => {
           const data = doc.data();
           if (data.photos) {
-            const userPhotosInStation = data.photos.filter(photo => photo.userId === userId);
+            const userPhotosInStation = data.photos.filter(
+              (photo) => photo.userId === userId
+            );
             userPhotosData.push(...userPhotosInStation);
           }
         });
@@ -103,19 +118,24 @@ const Dashboard = () => {
     if (!user) return;
 
     try {
-      const stationDocRef = doc(db, 'favorites', `${user.uid}_${stationId}`);
+      const stationDocRef = doc(db, "favorites", `${user.uid}_${stationId}`);
       const stationDocSnap = await getDoc(stationDocRef);
 
       if (stationDocSnap.exists()) {
         await deleteDoc(stationDocRef);
-        setFavoriteStations(favoriteStations.filter(station => station.stationId !== stationId));
+        setFavoriteStations(
+          favoriteStations.filter((station) => station.stationId !== stationId)
+        );
       } else {
         await setDoc(stationDocRef, {
           userId: user.uid,
           stationId,
-          isFavorite: true
+          isFavorite: true,
         });
-        setFavoriteStations([...favoriteStations, { userId: user.uid, stationId, isFavorite: true }]);
+        setFavoriteStations([
+          ...favoriteStations,
+          { userId: user.uid, stationId, isFavorite: true },
+        ]);
       }
     } catch (error) {
       console.error("Error toggling favorite status: ", error);
@@ -123,15 +143,15 @@ const Dashboard = () => {
   };
 
   const scrollLeft = () => {
-    scrollContainerRef.current.scrollBy({ left: -300, behavior: 'smooth' });
+    scrollContainerRef.current.scrollBy({ left: -300, behavior: "smooth" });
   };
 
   const scrollRight = () => {
-    scrollContainerRef.current.scrollBy({ left: 300, behavior: 'smooth' });
+    scrollContainerRef.current.scrollBy({ left: 300, behavior: "smooth" });
   };
 
   if (isLoading) {
-    return <Loading />
+    return <Loading />;
   }
 
   return (
@@ -143,52 +163,101 @@ const Dashboard = () => {
         </header>
         <main className="flex-1 p-4 md:p-6 overflow-y-auto">
           <section className="mb-6">
-            <h2 className="text-xl md:text-2xl font-bold">Welcome, {userInfo.username || 'User'}!</h2>
-            <p className="mt-2 text-slate-300/90">Last login time: {lastSignInTime}</p>
-            <p className="mt-2 text-slate-300/90">You have {userInfo.chargingSessions || 0} charging sessions this month.</p>
+            <h2 className="text-xl md:text-2xl font-bold">
+              Welcome, {userInfo.username || "User"}!
+            </h2>
+            <p className="mt-2 text-slate-300/90">
+              Last login time: {lastSignInTime}
+            </p>
+            <p className="mt-2 text-slate-300/90">
+              You have {userInfo.chargingSessions || 0} charging sessions this
+              month.
+            </p>
           </section>
           {/* --------------------------------------------*/}
           {/* Profile Info */}
           {/* --------------------------------------------*/}
           <section className="mb-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="bg-zinc-900/90 p-6 rounded-lg shadow-lg">
-              <h2 className="text-lg md:text-xl font-bold text-slate-300">Profile Info</h2>
-              <p className="text-slate-300/90 mt-2">Username: {userInfo.username || 'N/A'}</p>
-              <p className="text-slate-300/90">Email: {userInfo.email || 'N/A'}</p>
-              <p className="text-slate-300/90">EV Car: {userInfo.evCar || 'N/A'}</p>
-              <Link to='/profile-setup'>
-                <button className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-lg">Edit Profile</button>
+              <h2 className="text-lg md:text-xl font-bold text-slate-300">
+                Profile Info
+              </h2>
+              <p className="text-slate-300/90 mt-2">
+                Username: {userInfo.username || "N/A"}
+              </p>
+              <p className="text-slate-300/90">
+                Email: {userInfo.email || "N/A"}
+              </p>
+              <p className="text-slate-300/90">
+                EV Car: {userInfo.evCar || "N/A"}
+              </p>
+              <Link to="/profile-setup">
+                <button className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-lg">
+                  Edit Profile
+                </button>
               </Link>
             </div>
 
-          {/* --------------------------------------------*/}
-          {/* Favorite Stations Section */}
-          {/* --------------------------------------------*/}
-            
+            {/* --------------------------------------------*/}
+            {/* Favorite Stations Section */}
+            {/* --------------------------------------------*/}
+
             <div className="bg-zinc-900/90 p-6 rounded-lg shadow-lg">
-              <h2 className="text-lg md:text-xl font-bold text-slate-300">Favorite Stations</h2>
+              <h2 className="text-lg md:text-xl font-bold text-slate-300">
+                Favorite Stations
+              </h2>
               {favoriteStations.length > 0 ? (
-                <div className="relative">
-                  <button onClick={scrollLeft} className="absolute w-10 h-10 left-[-20px] top-1/2 transform -translate-y-1/2 bg-blue-500/50 hover:bg-blue-700/80 text-white p-2 rounded-full shadow-lg z-50">
+                <div className="relative pt-4">
+                  <button
+                    onClick={scrollLeft}
+                    className="absolute w-10 h-10 left-[-20px] top-1/2 transform  bg-blue-500/50 hover:bg-blue-700/80 text-white p-2 rounded-full shadow-lg z-50"
+                  >
                     &lt;
                   </button>
-                  <div ref={scrollContainerRef} className="flex overflow-x-scroll space-x-4">
+                  <div
+                    ref={scrollContainerRef}
+                    className="flex overflow-x-scroll space-x-4"
+                  >
                     {favoriteStations.map((station, index) => (
-                      <div key={index} className="min-w-[250px] md:min-w-[300px] bg-zinc-800 p-4 rounded-lg shadow-lg flex-shrink-0 relative">
-                        <h3 className="text-lg font-bold">{station.operatorTitle || 'Unnamed Station'}</h3>
-                        <p className='flex gap-2 items-center'><CiLocationArrow1 className='translate-y-[-3px]' /> {station.address || 'No address available'}</p>
-                        <p className='flex gap-2 items-center'><RiChargingPile2Line className='translate-y-[-3px]' /> {station.powerKW || 'N/A'} kW</p>
-                        <p className='flex gap-2 items-center'><GrStatusInfo className='translate-y-[-3px]' /> Status: {station.status || 'N/A'} <IoCheckmarkCircle className='text-green-600 translate-y-[-3px]' /></p>
-                        <button 
-                          onClick={() => handleToggleFavorite(station.stationId)} 
+                      <div
+                        key={index}
+                        className="min-w-[250px] md:min-w-[300px] bg-zinc-800 p-4 rounded-lg shadow-lg flex-shrink-0 relative text-[14px] items-center"
+                      >
+                        <h3 className="text-base font-bold pb-2">
+                          {station.operatorTitle || "Unnamed Station"}
+                        </h3>
+                        <p className="flex gap-2 items-center pb-1">
+                          <CiLocationArrow1 size={16} className="" />{" "}
+                          {station.address || "No address available"}
+                        </p>
+                        <p className="flex gap-2 items-center pb-1">
+                          <RiChargingPile2Line size={16} className="" />{" "}
+                          {station.powerKW || "N/A"} kW
+                        </p>
+                        <p className="flex gap-2 items-center pb-1">
+                          <GrStatusInfo size={16} /> Status:{" "}
+                          {station.status || "N/A"}{" "}
+                          <IoCheckmarkCircle className="text-green-600 translate-y-[-3px]" />
+                        </p>
+                        <button
+                          onClick={() =>
+                            handleToggleFavorite(station.stationId)
+                          }
                           className="absolute top-4 right-4 text-red-600 bg-transparent border-none"
                         >
-                          {station.isFavorite ? <FaHeart size={20} /> : <FaRegHeart size={20} />}
+                          {station.isFavorite ? (
+                            <FaHeart size={20} />
+                          ) : (
+                            <FaRegHeart size={20} />
+                          )}
                         </button>
                       </div>
                     ))}
                   </div>
-                  <button onClick={scrollRight} className="absolute w-10 h-10 right-[-20px] top-1/2 transform -translate-y-1/2 bg-blue-500/50 hover:bg-blue-700/80 text-white p-2 rounded-full shadow-lg">
+                  <button
+                    onClick={scrollRight}
+                    className="absolute w-10 h-10 right-[-20px] top-1/2 transform bg-blue-500/50 hover:bg-blue-700/80 text-white p-2 rounded-full shadow-lg"
+                  >
                     &gt;
                   </button>
                 </div>
@@ -198,26 +267,37 @@ const Dashboard = () => {
             </div>
           </section>
           {/* --------------------------------------------*/}
+          <section className="mb-6 grid grid-cols-1 gap-6">
+          {/* --------------------------------------------*/}
           {/* My Comments Section */}
           {/* --------------------------------------------*/}
 
-          <section className="mb-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="w-full bg-zinc-900/90 p-6 rounded-lg shadow-lg">
-              <h2 className="text-lg md:text-xl font-bold text-slate-300">My Comments</h2>
+              <h2 className="text-lg md:text-xl font-bold text-slate-300">
+                My Comments
+              </h2>
               {userComments.length > 0 ? (
-                <div className="space-y-4">
+                <div className="flex space-x-4 overflow-x-scroll pt-4">
                   {userComments.map((comment, index) => (
-                    <div key={index} className="p-4 bg-zinc-800 rounded-lg shadow-lg">
+                    <div
+                      key={index}
+                      className="min-w-[300px] p-4 bg-zinc-800 rounded-lg shadow-lg"
+                    >
                       <div className="flex items-center mb-2">
-                        <img src={comment.profilePicture} alt="Profile" className="w-10 h-10 rounded-full mr-3" />
+                        <img
+                          src={comment.profilePicture}
+                          alt="Profile"
+                          className="w-10 h-10 rounded-full mr-3"
+                        />
                         <div>
                           <p className="font-bold">{comment.userName}</p>
-                          
-                          <p className="text-xs text-slate-300/90">{new Date(comment.timestamp).toLocaleString()}</p>
+                          <p className="text-xs text-slate-300/90">
+                            {new Date(comment.timestamp).toLocaleString()}
+                          </p>
                         </div>
                       </div>
                       <p>{comment.userCar}</p>
-                      <p className="text-slate-300/90 mt-2">{comment.text}</p>
+                      <p className="text-slate-300/60 mt-2 text-[14px]">{comment.text}</p>
                     </div>
                   ))}
                 </div>
@@ -225,18 +305,26 @@ const Dashboard = () => {
                 <p className="text-slate-300/90">No comments found.</p>
               )}
             </div>
-          {/* --------------------------------------------*/}
-          {/* My Photos Section */}
-          {/* --------------------------------------------*/}
+            {/* --------------------------------------------*/}
+            {/* My Photos Section */}
+            {/* --------------------------------------------*/}
 
             <div className="bg-zinc-900/90 p-6 rounded-lg shadow-lg">
-              <h2 className="text-lg md:text-xl font-bold text-slate-300">My Photos</h2>
+              <h2 className="text-lg md:text-xl font-bold text-slate-300">
+                My Photos
+              </h2>
               {userPhotos.length > 0 ? (
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 pt-4">
                   {userPhotos.map((photo, index) => (
                     <div key={index} className="relative">
-                      <img src={photo.url} alt={`User Photo ${index}`} className="w-full h-32 object-cover rounded-lg" />
-                      <p className="absolute bottom-2 left-2 text-xs text-slate-300/90 bg-black/50 px-2 py-1 rounded">{new Date(photo.timestamp).toLocaleString()}</p>
+                      <img
+                        src={photo.url}
+                        alt={`User Photo ${index}`}
+                        className="w-full h-32 object-cover rounded-lg"
+                      />
+                      <p className="absolute bottom-2 left-2 text-xs text-slate-300/90 bg-black/50 px-2 py-1 rounded">
+                        {new Date(photo.timestamp).toLocaleString()}
+                      </p>
                     </div>
                   ))}
                 </div>
@@ -245,14 +333,22 @@ const Dashboard = () => {
               )}
             </div>
           </section>
+
           {/* --------------------------------------------*/}
           {/* Support Section */}
           {/* --------------------------------------------*/}
           <section className="mb-6">
             <div className="bg-zinc-900/90 p-6 rounded-lg shadow-lg">
-              <h2 className="text-lg md:text-xl font-bold text-slate-300">Support</h2>
-              <p className="text-slate-300/90 mt-2">If you have any issues or need help, please contact our support team.</p>
-              <button className="mt-4 bg-red-500 text-white px-4 py-2 rounded-lg">Contact Support</button>
+              <h2 className="text-lg md:text-xl font-bold text-slate-300">
+                Support
+              </h2>
+              <p className="text-slate-300/90 mt-2">
+                If you have any issues or need help, please contact our support
+                team.
+              </p>
+              <button className="mt-4 bg-red-500 text-white px-4 py-2 rounded-lg">
+                Contact Support
+              </button>
             </div>
           </section>
         </main>

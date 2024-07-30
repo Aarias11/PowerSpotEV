@@ -220,18 +220,29 @@ const Home = () => {
   const handlePlaceChanged = () => {
     if (autocompleteRef.current) {
       const place = autocompleteRef.current.getPlace();
-      if (place.geometry) {
-        const { lat, lng } = place.geometry.location;
-        const location = { lat: lat(), lng: lng() };
-        setSearchedLocation(location); // Set the searched location
-        map.panTo(location);
-        map.setZoom(15); // Adjust the zoom level as needed
-        fetchStations(location);
-        fetchCity(lat(), lng());
-        setSearchTerm(""); // Reset the search term after place is selected
+      if (place && place.geometry) {
+        const location = {
+          lat: place.geometry.location.lat(),
+          lng: place.geometry.location.lng()
+        };
+        setSearchedLocation(location);
+        if (map) {
+          map.panTo(location);
+          map.setZoom(15);
+        }
       }
     }
   };
+
+  useEffect(() => {
+    if (map && !mapLoading) {
+      const center = map.getCenter();
+      if (center) {
+        fetchStations({ lat: center.lat(), lng: center.lng() });
+        fetchCity(center.lat(), center.lng());
+      }
+    }
+  }, [map, mapLoading]);
 
   const onSelect = (item) => {
     setSelectedStation(item);
@@ -300,7 +311,7 @@ const Home = () => {
           {/* SearchBar */}
           <form
             onSubmit={(e) => e.preventDefault()}
-            className="absolute top-20 left-1/2 transform -translate-x-1/2 w-[480px] bg-white rounded-full shadow-lg z-40 flex items-center opacity-95"
+            className="absolute top-2.5 left-1/2 transform -translate-x-1/2 w-[480px] bg-white rounded-full shadow-lg z-40 flex items-center opacity-95"
           >
             <Autocomplete className="w-full"
               onLoad={(ref) => (autocompleteRef.current = ref)}

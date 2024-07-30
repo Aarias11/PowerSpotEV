@@ -12,13 +12,13 @@ import Modal from '../../components/Modal/Modal';
 
 const Drawer = ({ isOpen, onClose, selectedStation, nearbyLocations }) => {
   const [isFavorite, setIsFavorite] = useState(false);
-  const [photos, setPhotos] = useState([]); // State to hold the uploaded photos
+  const [photos, setPhotos] = useState([]);
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
   const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(0);
-  const [comments, setComments] = useState([]); // State to hold comments
+  const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
-  const [userCar, setUserCar] = useState(""); // State to hold the user's EV car
+  const [userCar, setUserCar] = useState("");
 
   const user = auth.currentUser;
   const storage = getStorage();
@@ -67,6 +67,10 @@ const Drawer = ({ isOpen, onClose, selectedStation, nearbyLocations }) => {
   }, [user]);
 
   const handleFavoriteToggle = async () => {
+    if (!user) {
+      alert("You must be logged in to add to favorites.");
+      return;
+    }
     try {
       if (user && selectedStation) {
         const docRef = doc(db, 'favorites', `${user.uid}_${selectedStation.ID}`);
@@ -87,6 +91,10 @@ const Drawer = ({ isOpen, onClose, selectedStation, nearbyLocations }) => {
   };
 
   const handlePhotoUpload = async (event) => {
+    if (!user) {
+      alert("You must be logged in to upload photos.");
+      return;
+    }
     const files = Array.from(event.target.files);
     files.forEach(async (file) => {
       const storageRef = ref(storage, `stations/${selectedStation.ID}/${file.name}`);
@@ -137,6 +145,10 @@ const Drawer = ({ isOpen, onClose, selectedStation, nearbyLocations }) => {
   };
 
   const handleAddComment = async () => {
+    if (!user) {
+      alert("You must be logged in to leave a comment.");
+      return;
+    }
     if (user && selectedStation) {
       const newCommentData = {
         userName: user.displayName || "Anonymous",
@@ -211,35 +223,41 @@ const Drawer = ({ isOpen, onClose, selectedStation, nearbyLocations }) => {
         </div>
         {/* Station Info Card Container */}
         <div className="w-full h-auto flex justify-center">
-          <div className="w-[374px] h-auto translate-y-[-15px] bg-zinc-800/70 rounded-2xl p-4 text-slate-300">
+          <div className="w-[374px] h-auto translate-y-[-15px] bg-zinc-800/20 rounded-2xl p-4 text-slate-300">
             {/* Card Content */}
             <div className="w-full flex flex-col justify-between">
               {/* Electric Company and kW offered Container */}
-              <div className="flex justify-between">
+              <div className="flex flex-wrap gap-4 items-center pt-4 pb-4">
                 <Link to={selectedStation?.OperatorInfo?.WebsiteURL || "N/A"}>
-                  <h4 className='text-[16px] font-light text-slate-300/90'>{selectedStation?.OperatorInfo?.Title || "N/A"}</h4>
+                  <h4 className='text-[12px] font-light text-slate-300/90  rounded-xl w-auto h-auto p-2 px-4 bg-slate-600/80'>{selectedStation?.OperatorInfo?.Title || "N/A"}</h4>
                 </Link>
-                <h4 className='text-[16px] font-light text-slate-300/90'>{selectedStation?.Connections[0]?.PowerKW || "N/A"} kW</h4>
-              </div>
-              {/* Selected Station Container */}
-              <div>
-                <h2 className="text-3xl font-semibold text-center text-slate-300">
-                  {selectedStation?.AddressInfo?.Title}
-                </h2>
-              </div>
               {/* Types of Charges Container */}
-              <div className="">
-                <h4 className='text-[16px] font-light text-slate-300/90'>
+                <h4 className='text-[12px] font-light rounded-xl p-2 bg-teal-700 px-4'>
                   {selectedStation?.Connections?.map(
                     (conn) => conn.ConnectionType?.Title
                   ).join(", ")}
                 </h4>
+                  
               </div>
+              {/* Selected Station Container */}
+              <div className=''>
+                <h2 className="text-3xl font-semibold text-center text-slate-100">
+                  {selectedStation?.AddressInfo?.Title}
+                </h2>
+              </div>
+              {/* Electric Company and kW offered Container */}
+              <div className="flex flex-wrap gap-4 items-center pt-4">
+                
+              {/* Types of Charges Container */}
+          
+                  <h4 className='text-[12px] font-light text-slate-300/90 ' >{selectedStation?.Connections[0]?.PowerKW || "N/A"} kW</h4>
+              </div>
+              
             </div>
           </div>
         </div>
         {/* Get Directions Icon */}
-        <div className='px-5'>
+        <div className='px-5 text-[12px]'>
           <button
             onClick={() =>
               getDirections(
@@ -250,7 +268,7 @@ const Drawer = ({ isOpen, onClose, selectedStation, nearbyLocations }) => {
             className="mt-1 p-3 py-2 bg-blue-500 text-white rounded-full flex justify-center gap-2 items-center"
           >
             Get Directions
-            <MdDirections className='translate-y-[-2px]' />
+            <MdDirections />
           </button>
         </div>
         {/* More Station Info Container */}
@@ -305,38 +323,49 @@ const Drawer = ({ isOpen, onClose, selectedStation, nearbyLocations }) => {
         {/* Nearby Locations Container */}
         <div className='w-full h-auto px-5 mt-5'>
           <h3 className='font-bold text-[18px] text-slate-300'>Nearby Locations</h3>
-          {nearbyLocations.map((location, index) => (
-            <div key={index} className='flex gap-4 items-center p-2'>
-              <FaMapMarkerAlt className='w-5 h-5 translate-y-[-11px] text-slate-300/90' />
-              <div className='flex flex-col'>
-                <span className='font-semibold text-[14px] translate-y-[3px] text-slate-300'>Address: {location.AddressInfo.AddressLine1}</span>
-                <span className='font-light text-[14px] translate-y-[3px] text-slate-300/90'>{location.AddressInfo.Title}</span>
+          {nearbyLocations.length > 0 ? (
+            nearbyLocations.map((location, index) => (
+              <div key={index} className='flex gap-4 items-center p-2'>
+                <FaMapMarkerAlt className='w-5 h-5 translate-y-[-11px] text-slate-300/90' />
+                <div className='flex flex-col'>
+                  <span className='font-semibold text-[14px] translate-y-[3px] text-slate-300'>Address: {location.AddressInfo.AddressLine1}</span>
+                  <span className='font-light text-[14px] translate-y-[3px] text-slate-300/90'>{location.AddressInfo.Title}</span>
+                </div>
               </div>
-            </div>
-          ))}
+            ))
+          ) : (
+            <p className="text-slate-300/90">No nearby locations available.</p>
+          )}
         </div>
 
         {/* Photos */}
         <div className='w-full h-[200px] px-5 mt-5'>
           <div className='flex justify-between items-center'>
             <h3 className='font-bold text-slate-300'>Photos</h3>
-            <label className="cursor-pointer text-slate-300/90">
-              <MdAddPhotoAlternate size={24} />
-              <input type="file" className="hidden" onChange={handlePhotoUpload} />
-            </label>
+            {user ? (
+              <label className="cursor-pointer text-slate-300/90">
+                <MdAddPhotoAlternate size={24} />
+                <input type="file" className="hidden" onChange={handlePhotoUpload} />
+              </label>
+            ) : (
+              <span className="text-slate-300/90">Log in to upload photos</span>
+            )}
             <span className='text-slate-300/90'>See All</span>
           </div>
-          {/* Photos Container */}
           <div className='w-full flex gap-2 overflow-x-auto flex-grow-1 pt-5'>
-            {photos.map((photo, index) => (
-              <div
-                key={index}
-                className=' w-[120px] h-[120px] flex-shrink-0 cursor-pointer'
-                onClick={() => handlePhotoClick(index)}
-              >
-                <img src={photo.url} alt={`Station Media ${index}`} className='w-full h-full object-cover rounded-xl' />
-              </div>
-            ))}
+            {photos.length > 0 ? (
+              photos.map((photo, index) => (
+                <div
+                  key={index}
+                  className=' w-[120px] h-[120px] flex-shrink-0 cursor-pointer'
+                  onClick={() => handlePhotoClick(index)}
+                >
+                  <img src={photo.url} alt={`Station Media ${index}`} className='w-full h-full object-cover rounded-xl' />
+                </div>
+              ))
+            ) : (
+              <p className="text-slate-300/90 flex justify-center w-full h-full mt-10">No photos available.</p>
+            )}
           </div>
         </div>
 
@@ -344,28 +373,36 @@ const Drawer = ({ isOpen, onClose, selectedStation, nearbyLocations }) => {
         <div className='w-full h-[300px] px-5 mt-5'>
           <div className='flex justify-between items-center'>
             <h3 className='font-bold text-slate-300'>Comments</h3>
-            <button
-              onClick={() => setIsCommentModalOpen(true)}
-              className="text-slate-300"
-            >
-              <MdMessage size={20} />
-            </button>
+            {user ? (
+              <button
+                onClick={() => setIsCommentModalOpen(true)}
+                className="text-slate-300"
+              >
+                <MdMessage size={20} />
+              </button>
+            ) : (
+              <span className="text-slate-300/90">Log in to leave a comment</span>
+            )}
           </div>
-          {comments.map((comment, index) => (
-            <div key={index} className='w-full h-auto flex p-2 mb-2'>
-              <div className='w-[70px] h-[60px] rounded-full overflow-hidden mt-4'>
-                <img src={comment.profilePicture} alt="Profile" className='w-full h-full object-cover' />
-              </div>
-              <div className='w-full h-auto text-white p-2 rounded-lg mt-4'>
-                <div className='flex justify-between'>
-                  <p className='font-semibold'>{comment.userName}</p>
-                  <p>{new Date(comment.timestamp).toLocaleString()}</p>
+          {comments.length > 0 ? (
+            comments.map((comment, index) => (
+              <div key={index} className='w-full h-auto flex p-2 mb-2'>
+                <div className='w-[70px] h-[60px] rounded-full overflow-hidden mt-4'>
+                  <img src={comment.profilePicture} alt="Profile" className='w-full h-full object-cover' />
                 </div>
-                <p>{comment.userCar}</p>
-                <p className='text-[14px]'>{comment.text}</p>
+                <div className='w-full h-auto text-white p-2 rounded-lg mt-4'>
+                  <div className='flex justify-between'>
+                    <p className='font-semibold'>{comment.userName}</p>
+                    <p>{new Date(comment.timestamp).toLocaleString()}</p>
+                  </div>
+                  <p>{comment.userCar}</p>
+                  <p className='text-[14px]'>{comment.text}</p>
+                </div>
               </div>
-            </div>
-          ))}
+            ))
+          ) : (
+            <p className="text-slate-300/90 flex justify-center w-full h-full mt-10">No comments available.</p>
+          )}
         </div>
       </motion.div>
       <Modal isOpen={isPhotoModalOpen} onClose={() => setIsPhotoModalOpen(false)}>
@@ -386,25 +423,31 @@ const Drawer = ({ isOpen, onClose, selectedStation, nearbyLocations }) => {
         </div>
       </Modal>
       <Modal isOpen={isCommentModalOpen} onClose={() => setIsCommentModalOpen(false)}>
-        <div className="flex items-center p-4 bg-[#131313] rounded-lg">
-          <div className="w-[60px] h-[60px] rounded-full border overflow-hidden mr-4">
-            <img src={user?.photoURL || "https://via.placeholder.com/150"} alt="Profile" className='w-full h-full object-cover' />
-          </div>
-          <textarea
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-            className="w-full h-[100px] p-2 bg-zinc-800/70 rounded-lg text-white resize-none"
-            placeholder="Write your comment here..."
-          ></textarea>
-        </div>
-        <div className="flex justify-end p-4">
-          <button
-            onClick={handleAddComment}
-            className="px-4 py-2 bg-blue-500 text-white rounded-full"
-          >
-            Submit
-          </button>
-        </div>
+        {user ? (
+          <>
+            <div className="flex items-center p-4 bg-[#131313] rounded-lg">
+              <div className="w-[60px] h-[60px] rounded-full border overflow-hidden mr-4">
+                <img src={user?.photoURL || "https://via.placeholder.com/150"} alt="Profile" className='w-full h-full object-cover' />
+              </div>
+              <textarea
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                className="w-full h-[100px] p-2 bg-zinc-800/70 rounded-lg text-white resize-none"
+                placeholder="Write your comment here..."
+              ></textarea>
+            </div>
+            <div className="flex justify-end p-4">
+              <button
+                onClick={handleAddComment}
+                className="px-4 py-2 bg-blue-500 text-white rounded-full"
+              >
+                Submit
+              </button>
+            </div>
+          </>
+        ) : (
+          <p className="text-white p-4">You must be logged in to leave a comment.</p>
+        )}
       </Modal>
     </>
   );
