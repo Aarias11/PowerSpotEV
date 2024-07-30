@@ -230,6 +230,7 @@ const Home = () => {
           map.panTo(location);
           map.setZoom(15);
         }
+        setSearchTerm(""); // Clear the search input
       }
     }
   };
@@ -321,7 +322,7 @@ const Home = () => {
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search for a location..."
+                placeholder="Search for a location"
                 className="w-full border-none outline-none rounded-full px-4 py-2"
               />
             </Autocomplete>
