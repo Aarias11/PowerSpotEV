@@ -65,7 +65,7 @@ const Navbar = () => {
             ) : (
               <>
                 <button onClick={() => setIsLoginOpen(true)} className="px-3">Login</button>
-                <button onClick={() => setIsSignupOpen(true)} className="py-1 px-3 bg-yellow-400 hover:bg-yellow-300 text-yellow-900 rounded transition duration-300">Signup</button>
+                <button onClick={() => setIsSignupOpen(true)} className="py-1 px-3 bg-zinc-600 hover:bg-zinc-800 rounded-lg transition duration-300">Signup</button>
               </>
             )}
           </div>

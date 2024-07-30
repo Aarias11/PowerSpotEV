@@ -86,19 +86,19 @@ const Login = ({ isOpen, onClose }) => {
                   value={email}
                   placeholder="john.doe@example.com"
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full h-[40px] pl-5 pt-2 border rounded-full bg-[#02151F] text-white text-[12px] focus:outline-none focus:border-blue-500"
+                  className="w-full h-[40px] pl-5 border rounded-full bg-[#02151F] text-white text-[12px] focus:outline-none focus:border-blue-500"
                   required
                 />
                 <FaEnvelope className="absolute top-8 right-5 text-white" />
               </div>
               <div className="mb-4 relative">
-                <label className="block text-white ml-4 text-[12px]">Password</label>
+                <label className="block text-white ml-4 text-[12px] ">Password</label>
                 <input
                   type={showPassword ? "text" : "password"}
                   value={password}
                   placeholder="*********"
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full h-[40px] pl-5 pt-3 border rounded-full bg-[#02151F] text-white text-[12px] focus:outline-none focus:border-blue-500"
+                  className="w-full h-[40px] pl-5 pt-1 border rounded-full bg-[#02151F] text-white text-[12px] focus:outline-none focus:border-blue-500"
                   required
                 />
                 <div
@@ -108,7 +108,7 @@ const Login = ({ isOpen, onClose }) => {
                   {showPassword ? <FaEyeSlash /> : <FaEye />}
                 </div>
               </div>
-              <button type="submit" className="bg-blue-500 text-white pt-2 rounded-lg w-full h-[40px]">
+              <button type="submit" className="bg-blue-500 text-white rounded-lg w-full h-[40px]">
                 Login
               </button>
             </form>
@@ -121,16 +121,16 @@ const Login = ({ isOpen, onClose }) => {
             {/* Google and Apple Login */}
             <div className="w-full flex flex-col justify-center items-center gap-4 mt-10 relative">
               <button
-                className="w-[200px] h-[40px] border rounded-full text-white text-[12px] flex justify-center gap-4 items-center pt-1"
+                className="w-[200px] h-[40px] border rounded-full text-white text-[12px] flex justify-center gap-4 items-center "
                 onClick={handleGoogleLogin}
               >
-                <img className="w-5 h-5 translate-y-[-3px]" src={Googleicon} alt="Google" />
+                <img className="w-5 h-5 translate-y-[-1px]" src={Googleicon} alt="Google" />
                 Login with Google
               </button>
-              <button className="w-[200px] h-[40px] border rounded-full text-black bg-white text-[12px] flex justify-center items-center gap-4 pt-1">
+              {/* <button className="w-[200px] h-[40px] border rounded-full text-black bg-white text-[12px] flex justify-center items-center gap-4 pt-1">
                 <img className="w-5 h-5 translate-y-[-4px]" src={Apple} alt="Apple" />
                 Login with Apple
-              </button>
+              </button> */}
             </div>
           </div>
         </div>
