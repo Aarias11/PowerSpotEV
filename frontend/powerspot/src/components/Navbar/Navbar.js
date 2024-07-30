@@ -20,7 +20,7 @@ const Navbar = () => {
   }
 
   return (
-    <nav className="bg-zinc-900 text-white shadow-lg  w-full h-[70px] z-50 sm:px-6 md:px-28 flex justify-center items-center">
+    <nav className="bg-zinc-900 text-white shadow-lg  w-full h-[70px] z-50 pr-4 sm:px-6 md:px-28 flex justify-center items-center">
       <div className="w-full">
         <div className="flex justify-between">
           <div className="flex space-x-4">

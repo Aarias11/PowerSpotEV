@@ -320,7 +320,7 @@ const Dashboard = () => {
                       <img
                         src={photo.url}
                         alt={`User Photo ${index}`}
-                        className="w-full h-32 object-cover rounded-lg"
+                        className="w-55 h-32 object-cover rounded-lg"
                       />
                       <p className="absolute bottom-2 left-2 text-xs text-slate-300/90 bg-black/50 px-2 py-1 rounded">
                         {new Date(photo.timestamp).toLocaleString()}
