@@ -99,7 +99,7 @@ const Drawer = ({ isOpen, onClose, selectedStation, nearbyLocations }) => {
     files.forEach(async (file) => {
       const storageRef = ref(storage, `stations/${selectedStation.ID}/${file.name}`);
       const uploadTask = uploadBytesResumable(storageRef, file);
-
+  
       uploadTask.on(
         'state_changed',
         (snapshot) => {
@@ -118,13 +118,24 @@ const Drawer = ({ isOpen, onClose, selectedStation, nearbyLocations }) => {
             timestamp: new Date().toISOString(),
           };
           setPhotos((prevPhotos) => [...prevPhotos, photoData]);
-          await updateDoc(doc(db, 'stations', `${selectedStation.ID}`), {
-            photos: arrayUnion(photoData)
-          });
+  
+          const docRef = doc(db, 'stations', `${selectedStation.ID}`);
+          const docSnap = await getDoc(docRef);
+  
+          if (docSnap.exists()) {
+            await updateDoc(docRef, {
+              photos: arrayUnion(photoData),
+            });
+          } else {
+            await setDoc(docRef, {
+              photos: [photoData],
+            });
+          }
         }
       );
     });
   };
+  
 
   const getDirections = (lat, lng) => {
     const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
@@ -158,10 +169,10 @@ const Drawer = ({ isOpen, onClose, selectedStation, nearbyLocations }) => {
         timestamp: new Date().toISOString(),
         userId: user.uid,
       };
-
+  
       const docRef = doc(db, 'stations', `${selectedStation.ID}`);
       const docSnap = await getDoc(docRef);
-
+  
       if (docSnap.exists()) {
         await updateDoc(docRef, {
           comments: arrayUnion(newCommentData),
@@ -171,12 +182,13 @@ const Drawer = ({ isOpen, onClose, selectedStation, nearbyLocations }) => {
           comments: [newCommentData],
         });
       }
-
+  
       setComments((prevComments) => [...prevComments, newCommentData]);
       setNewComment("");
       setIsCommentModalOpen(false);
     }
   };
+  
 
   return (
     <>
@@ -223,7 +235,7 @@ const Drawer = ({ isOpen, onClose, selectedStation, nearbyLocations }) => {
         </div>
         {/* Station Info Card Container */}
         <div className="w-full h-auto flex justify-center">
-          <div className="w-[374px] h-auto translate-y-[-15px] bg-zinc-800/20 rounded-2xl p-4 text-slate-300">
+          <div className="w-[374px] h-auto translate-y-[-15px] bg-zinc-800/70 backdrop-blur-sm rounded-2xl p-4 text-slate-300">
             {/* Card Content */}
             <div className="w-full flex flex-col justify-between">
               {/* Electric Company and kW offered Container */}
@@ -250,7 +262,7 @@ const Drawer = ({ isOpen, onClose, selectedStation, nearbyLocations }) => {
                 
               {/* Types of Charges Container */}
           
-                  <h4 className='text-[12px] font-light text-slate-300/90 ' >{selectedStation?.Connections[0]?.PowerKW || "N/A"} kW</h4>
+                  <h4 className='text-[14px] font-light text-slate-300/90 ' >{selectedStation?.Connections[0]?.PowerKW || "N/A"} kW</h4>
               </div>
               
             </div>
@@ -350,7 +362,7 @@ const Drawer = ({ isOpen, onClose, selectedStation, nearbyLocations }) => {
             ) : (
               <span className="text-slate-300/90">Log in to upload photos</span>
             )}
-            <span className='text-slate-300/90'>See All</span>
+            {/* <span className='text-slate-300/90'>See All</span> */}
           </div>
           <div className='w-full flex gap-2 overflow-x-auto flex-grow-1 pt-5'>
             {photos.length > 0 ? (
@@ -422,7 +434,7 @@ const Drawer = ({ isOpen, onClose, selectedStation, nearbyLocations }) => {
           </button>
         </div>
       </Modal>
-      <Modal isOpen={isCommentModalOpen} onClose={() => setIsCommentModalOpen(false)}>
+      <Modal isOpen={isCommentModalOpen} onClose={() => setIsCommentModalOpen(false)} width='853px' height='300px'>
         {user ? (
           <>
           <h2 className='text-2xl text-zinc-300'>{selectedStation?.AddressInfo?.Title}</h2>

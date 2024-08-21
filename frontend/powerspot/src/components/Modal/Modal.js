@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-const Modal = ({ isOpen, onClose, children }) => {
+const Modal = ({ isOpen, onClose, children, width = "853px", height = "540px", className }) => {
   return (
     <>
       {isOpen && (
@@ -13,10 +13,11 @@ const Modal = ({ isOpen, onClose, children }) => {
           onClick={onClose}
         >
           <motion.div
-            className="bg-[#131313]/95 rounded-lg shadow-lg p-6  w-[853px] h-[540px]"
+            className={`bg-[#131313]/95 rounded-lg shadow-lg p-6 ${className}`}
             initial={{ scale: 0.8 }}
             animate={{ scale: 1 }}
             exit={{ scale: 0.8 }}
+            style={{ width, height }}
             onClick={(e) => e.stopPropagation()}
           >
             {children}

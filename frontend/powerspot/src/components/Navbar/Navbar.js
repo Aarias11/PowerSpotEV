@@ -59,7 +59,7 @@ const Navbar = () => {
               <Link to='/dashboard'>
                 <li>Dashboard</li>
               </Link>
-              <button onClick={signout} className="px-3 py-1 bg-red-500 hover:bg-red-400 text-white rounded transition duration-300">Sign Out</button>
+              <button onClick={signout} className="px-3 py-1 bg-slate-600 hover:bg-slate-700 text-slate-200 rounded transition duration-300">Sign Out</button>
               </ul>
               </>
             ) : (
@@ -125,7 +125,7 @@ const Navbar = () => {
             {/* Conditional rendering for when user is signed in */}
             <div className='ml-2'>
               {currentUser ? (
-                <button onClick={signout} className="py-2 px-3 bg-red-500 hover:bg-red-400 text-white rounded transition duration-300">Sign Out</button>
+                <button onClick={signout} className="py-2 px-3 bg-slate-600 hover:bg-slate-700 text-slate-200 rounded transition duration-300">Sign Out</button>
               ) : (
                 <>
                   <div className='flex'>

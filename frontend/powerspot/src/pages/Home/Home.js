@@ -40,6 +40,7 @@ const Home = () => {
   const autocompleteRef = useRef(null);
   const loadingBarRef = useRef(null);
   const location = useLocation();
+  const [isApiLoaded, setIsApiLoaded] = useState(false);
 
   useEffect(() => {
     loadingBarRef.current.continuousStart();
@@ -295,11 +296,20 @@ const Home = () => {
     <>
       <LoadingBar color="#f11946" ref={loadingBarRef} />
       <LoadScript
-        googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY}
-        libraries={libraries}
-        onLoad={() => console.log("Google Maps API loaded successfully")}
-        onError={(error) => console.error("Error loading Google Maps API:", error)}
-      >
+    googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY}
+    libraries={libraries}
+    onLoad={() => console.log("Google Maps API loaded successfully")}
+    onError={(error) => console.error("Error loading Google Maps API:", error)}
+>
+{isApiLoaded && (
+        <GoogleMap
+            mapContainerStyle={{ width: "100%", height: "100%" }}
+            // ... other props
+        >
+            {/* Markers, InfoWindows, etc. */}
+        </GoogleMap>
+    )}
+
         <div style={containerStyle}>
           {/* Loading Indicator */}
           {loading && (
@@ -323,12 +333,12 @@ const Home = () => {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Search for a location"
-                className="w-full border-none outline-none rounded-full px-4 py-2"
+                className="w-full border-none outline-none rounded-full px-4 py-2 bg-slate-300/70 backdrop-blur-sm"
               />
             </Autocomplete>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-400 h-[40px] text-black rounded-xl ml-2 flex items-center justify-center absolute right-0"
+              className="px-4 py-2 bg-blue-400/70 h-[40px] backdrop-blur-sm text-black rounded-xl ml-2 flex items-center justify-center absolute right-0"
             >
               <FaSearch />
             </button>
