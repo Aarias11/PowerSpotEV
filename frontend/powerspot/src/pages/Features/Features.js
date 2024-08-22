@@ -23,8 +23,8 @@ function Features() {
         {/* Left Side */}
         <div className="md:w-[50%] w-full flex flex-col justify-center p-2 space-y-8">
           <header className="mb-8">
-            <h1 className="text-4xl font-bold text-white">Our Amazing Features</h1>
-            <p className="mt-2 text-slate-400">Explore the unique features that make our application stand out.</p>
+            <h1 className="text-4xl font-bold text-[#1e90ff]">Our Amazing Features</h1>
+            <p className="mt-2 text-slate-300">Explore the unique features that make our application stand out.</p>
           </header>
           <div className="space-y-8">
             {/* Feature 1 */}
@@ -33,7 +33,7 @@ function Features() {
                 <FaRocket size={30} />
               </div>
               <div>
-                <h3 className="text-2xl font-semibold text-slate-300">Real-Time Charging Station Locator</h3>
+                <h3 className="text-2xl font-semibold text-slate-100">Real-Time Charging Station Locator</h3>
                 <p className="text-slate-300/90 mt-1 text-[16px]">
                   The PowerEV App provides an intuitive map interface that allows users to locate nearby charging stations in real-time. The app uses OpenChargeMap and Google Maps APIs to display up-to-date information on the availability, status, and types of chargers available at each station.
                 </p>
@@ -45,7 +45,7 @@ function Features() {
                 <FaShieldAlt size={30} />
               </div>
               <div>
-                <h3 className="text-2xl font-semibold text-slate-300">Favorite Stations and Trip Planning</h3>
+                <h3 className="text-2xl font-semibold text-slate-100">Favorite Stations and Trip Planning</h3>
                 <p className="text-slate-300/90 mt-1 text-[16px]">
                   Users can save their favorite charging stations for quick access and plan their trips with integrated route suggestions. The app allows users to mark stations they prefer or frequently use, and it can suggest optimized routes that include these stations along the way.
                 </p>
@@ -57,7 +57,7 @@ function Features() {
                 <FaUsers size={30} />
               </div>
               <div>
-                <h3 className="text-2xl font-semibold text-slate-300">Building a Helpful EV Community</h3>
+                <h3 className="text-2xl font-semibold text-slate-100">Building a Helpful EV Community</h3>
                 <p className="text-slate-300/90 mt-1 text-[16px]">
                   Join a community of EV users to share tips, provide feedback on charging stations, and support each other in the transition to electric vehicles.
                 </p>

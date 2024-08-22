@@ -59,7 +59,7 @@ const Navbar = () => {
               <Link to='/dashboard'>
                 <li>Dashboard</li>
               </Link>
-              <button onClick={signout} className="px-3 py-1 bg-slate-600 hover:bg-slate-700 text-slate-200 rounded transition duration-300">Sign Out</button>
+              <button onClick={signout} className="px-3 py-1 bg-slate-600 hover:bg-slate-700 text-slate-200 rounded-xl transition duration-300">Sign Out</button>
               </ul>
               </>
             ) : (

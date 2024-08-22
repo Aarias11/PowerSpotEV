@@ -24,7 +24,7 @@ const About = () => {
     <div className="w-full min-h-screen bg-[#131313] text-slate-300 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-left mb-12 "> 
-          <h1 className="text-4xl font-bold text-slate-100 text-center">About PowerSpot EV</h1>
+          <h1 className="text-4xl font-bold text-[#1e90ff] text-center">About PowerSpot EV</h1>
           <div className='w-full flex justify-center'>
           <p className="mt-4 w-[60%] ">
             PowerEV was created to build awareness and foster a community around electric vehicles (EVs). Our goal is to provide a platform where EV users can easily find charging stations, share tips, and support each other.

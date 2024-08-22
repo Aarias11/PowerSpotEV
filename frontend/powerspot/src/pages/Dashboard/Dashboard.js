@@ -310,28 +310,27 @@ const Dashboard = () => {
             {/* --------------------------------------------*/}
 
             <div className="bg-zinc-900/90 p-6 rounded-lg shadow-lg">
-              <h2 className="text-lg md:text-xl font-bold text-slate-300">
-                My Photos
-              </h2>
-              {userPhotos.length > 0 ? (
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 pt-4">
-                  {userPhotos.map((photo, index) => (
-                    <div key={index} className="relative">
-                      <img
-                        src={photo.url}
-                        alt={`User Photo ${index}`}
-                        className="w-55 h-32 object-cover rounded-lg"
-                      />
-                      <p className="absolute bottom-2 left-2 text-xs text-slate-300/90 bg-black/50 px-2 py-1 rounded">
-                        {new Date(photo.timestamp).toLocaleString()}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-slate-300/90">No photos found.</p>
-              )}
-            </div>
+  <h2 className="text-lg md:text-xl font-bold text-slate-300">My Photos</h2>
+  {userPhotos.length > 0 ? (
+    <div className="flex gap-4 pt-4 overflow-x-scroll">
+      {userPhotos.map((photo, index) => (
+        <div key={index} className="relative flex-shrink-0 w-55">
+          <img
+            src={photo.url}
+            alt={`User Photo ${index}`}
+            className="w-full h-32 object-cover rounded-lg"
+          />
+          <p className="absolute bottom-2 left-2 text-xs text-slate-300/90 bg-black/50 px-2 py-1 rounded">
+            {new Date(photo.timestamp).toLocaleString()}
+          </p>
+        </div>
+      ))}
+    </div>
+  ) : (
+    <p className="text-slate-300/90">No photos found.</p>
+  )}
+</div>
+
           </section>
 
           {/* --------------------------------------------*/}

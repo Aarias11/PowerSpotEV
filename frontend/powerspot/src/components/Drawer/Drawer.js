@@ -277,7 +277,7 @@ const Drawer = ({ isOpen, onClose, selectedStation, nearbyLocations }) => {
                 selectedStation.AddressInfo.Longitude
               )
             }
-            className="mt-1 p-3 py-2 bg-blue-500 text-white rounded-full flex justify-center gap-2 items-center"
+            className="mt-1 p-3 py-2 bg-blue-500 text-white rounded-xl flex justify-center gap-2 items-center"
           >
             Get Directions
             <MdDirections />
@@ -437,7 +437,7 @@ const Drawer = ({ isOpen, onClose, selectedStation, nearbyLocations }) => {
       <Modal isOpen={isCommentModalOpen} onClose={() => setIsCommentModalOpen(false)} width='853px' height='300px'>
         {user ? (
           <>
-          <h2 className='text-2xl text-zinc-300'>{selectedStation?.AddressInfo?.Title}</h2>
+          <h2 className='text-2xl text-zinc-300'>Station: {selectedStation?.AddressInfo?.Title}</h2>
             <div className="flex items-center p-4 bg-[#131313] rounded-lg">
               <div className="w-[60px] h-[60px] rounded-full border overflow-hidden mr-4">
                 <img src={user?.photoURL || "https://via.placeholder.com/150"} alt="Profile" className='w-full h-full object-cover' />

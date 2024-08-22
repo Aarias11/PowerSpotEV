@@ -395,12 +395,8 @@ const Home = () => {
                 }}
                 onCloseClick={() => setSelectedStation(null)}
               >
-                <div>
-                  <img
-                    src="https://via.placeholder.com/100"
-                    alt="Station"
-                    className="w-full"
-                  />
+                <div className=" flex flex-col gap-4">
+                  
                   <h2>{selectedStation.AddressInfo.Title}</h2>
                   <p>
                     Connectors:{" "}
