@@ -23,7 +23,7 @@ function Features() {
         {/* Left Side */}
         <div className="md:w-[50%] w-full flex flex-col justify-center p-2 space-y-8">
           <header className="mb-8">
-            <h1 className="text-4xl font-bold text-[#1e90ff]">Our Amazing Features</h1>
+            <h1 className="text-4xl font-bold text-[#5ba4ee]">Our Amazing Features</h1>
             <p className="mt-2 text-slate-300">Explore the unique features that make our application stand out.</p>
           </header>
           <div className="space-y-8">

@@ -13,7 +13,7 @@ const LottieSustainabilityAnimation = () => {
     }
   };
 
-  return <Lottie options={defaultOptions} height={200} width={200} />;
+  return <Lottie options={defaultOptions} height={180} width={180}  />;
 };
 
 export default LottieSustainabilityAnimation;
