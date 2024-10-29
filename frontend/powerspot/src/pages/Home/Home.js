@@ -54,7 +54,7 @@ const Home = () => {
     try {
       const response = await axios.get("https://api.openchargemap.io/v3/poi/", {
         params: {
-          key: process.env.REACT_APP_OPEN_CHARGE_API_KEY, // Replace with your OpenChargeMap API key
+          key: process.env.REACT_APP_OPEN_CHARGE_API_KEY, 
           latitude: center.lat,
           longitude: center.lng,
           distance: 5, // 5-mile radius
@@ -107,7 +107,7 @@ const Home = () => {
     try {
       const response = await axios.get("https://api.openchargemap.io/v3/poi/", {
         params: {
-          key: process.env.REACT_APP_OPEN_CHARGE_API_KEY, // Replace with your OpenChargeMap API key
+          key: process.env.REACT_APP_OPEN_CHARGE_API_KEY, 
           latitude,
           longitude,
           distance: 5, // 5-mile radius
@@ -304,7 +304,6 @@ const Home = () => {
 {isApiLoaded && (
         <GoogleMap
             mapContainerStyle={{ width: "100%", height: "100%" }}
-            // ... other props
         >
             {/* Markers, InfoWindows, etc. */}
         </GoogleMap>
