@@ -1,3 +1,4 @@
+import { Analytics } from "@vercel/analytics/react";
 import { useState, useEffect } from 'react';
 import './App.css';
 import { Routes, Route } from 'react-router-dom';
@@ -7,26 +8,24 @@ import Home from './pages/Home/Home';
 import ProfileSetup from './pages/ProfileSetup/ProfileSetup';
 import PrivateRoute from './components/AuthContext/PrivateRoute';
 import { AuthProvider } from './components/AuthContext/AuthContext';
-import Login from './components/Login/Login'; // Ensure you have this component
+import Login from './components/Login/Login';
 import Features from './pages/Features/Features';
 import Footer from './components/Footer/Footer';
 import About from './pages/About/About';
 import Loading from './pages/Loading/Loading';
 
-
 function App() {
-  const [ isLoading, setIsLoading ] = useState(true)
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     setTimeout(() => {
-      setIsLoading(false)
-    }, 200)
-  }, [])
+      setIsLoading(false);
+    }, 200);
+  }, []);
 
   if (isLoading) {
-    return <Loading />
+    return <Loading />;
   }
-
 
   return (
     <AuthProvider>
@@ -39,9 +38,9 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/features" element={<Features />} />
           <Route path="/about" element={<About />} />
-          
         </Routes>
         <Footer />
+        <Analytics /> {/* Vercel Analytics component added here */}
       </div>
     </AuthProvider>
   );
